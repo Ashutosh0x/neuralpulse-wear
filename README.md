@@ -9,7 +9,13 @@
 [![FHIR](https://img.shields.io/badge/HL7_FHIR-C44F23?style=flat-square&logo=hl7&logoColor=white)](https://hl7.org/fhir/)
 [![Gradle](https://img.shields.io/badge/Gradle-02303A?style=flat-square&logo=gradle&logoColor=white)](https://gradle.org/)
 
-NeuralPulse is a premium, clinical-grade health monitoring ecosystem combining the NeuralPulse companion mobile app for Android 15+ and the standalone NeuralPulse wear application for Wear OS 5+. It combines high-frequency wearable biometric digital signal processing (DSP) with local on-device computer vision and natural language processing (NLP) models, keeping health telemetry highly performant, private, and secure.
+NeuralPulse is a premium, clinical-grade health monitoring ecosystem designed specifically for Android/Samsung Galaxy devices (smartphones, tablets) and Wear OS smartwatches (such as the Samsung Galaxy Watch series). 
+
+The ecosystem establishes a high-performance biometrics telemetry bridge:
+- **Mobile Companion App (`:app`)**: Runs natively on Android 15+ / One UI 7.0+ devices, orchestrating local edge-AI workloads, managing Room databases, and syncing clinical HL7 FHIR records via Android 16 Health Connect.
+- **Watch Application (`:wear`)**: Runs natively on Wear OS 5+ / Samsung One UI 6 Watch+ smartwatches, connecting directly to the hardware sensor hub to stream raw high-frequency biometric data (PPG, ECG, EDA, and BIA).
+
+By running real-time digital signal processing (DSP) like 4th-order Butterworth filters and statistical Kurtosis validation directly on the watch edge before transmitting via the Wearable Data Layer API, NeuralPulse ensures zero-latency, clinical-grade health tracking without draining device batteries or compromising user privacy.
 
 ---
 
