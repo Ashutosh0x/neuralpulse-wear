@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    wear_capabilities.xml
+    :wear module — res/values/
+
+    Declares the Wear OS capability string consumed by the phone's CapabilityClient.
+    The phone calls:
+      CapabilityClient.getCapability("neuralpulse_wear_capability", FILTER_REACHABLE)
+    and receives only nodes that have this :wear app installed and are Bluetooth-reachable.
+
+    This is the standard Google-recommended pattern for Wear OS app discovery.
+    Reference: https://developer.android.com/training/wearables/data/data-layer
+-->
+<resources>
+    <string-array name="android_wear_capabilities">
+        <item>neuralpulse_wear_capability</item>
+    </string-array>
+</resources>

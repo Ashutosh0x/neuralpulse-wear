@@ -80,6 +80,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
 
     // Jetpack Compose & Material 3
@@ -91,7 +92,18 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
 
     // Wear OS communication layer
-    implementation("com.google.android.gms:play-services-wearable:18.1.0")
+    implementation("com.google.android.gms:play-services-wearable:18.2.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // 3D Watch Widget: SceneView 2.3.0 (Compose-native, Filament-powered)
+    // Compose-declarative 3D: SceneView { } works like Column { }
+    implementation("io.github.sceneview:sceneview:2.3.0")
+
+    // Pairing animation: Lottie dotLottie (.lottie / .json) for watch-to-phone arc
+    implementation("com.airbnb.android:lottie-compose:6.3.0")
+
+    // Horologist data-layer: structured Wearable DataClient with coroutine support
+    implementation("com.google.android.horologist:horologist-datalayer:0.6.19")
     
     // CameraX for real-time camera feed
     val cameraxVersion = "1.3.1"

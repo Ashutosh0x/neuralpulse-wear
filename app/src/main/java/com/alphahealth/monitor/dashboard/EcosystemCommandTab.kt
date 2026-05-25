@@ -101,7 +101,17 @@ fun EcosystemCommandTab(
     ) {
 
         // -----------------------------------------------------------------------
+        // 0. 3D WATCH CONNECTION WIDGET
+        //    Animated Galaxy Watch 3D model (SceneView + Filament) with auto-connection.
+        //    Layer stack: 3D model | Lottie pairing arc | live telemetry chip overlay.
+        //    Auto-discovery: CapabilityClient FILTER_REACHABLE polls every 3s.
+        //    Live data: MessageClient /biometrics/ppg 12-byte ByteBuffer stream.
+        // -----------------------------------------------------------------------
+        WatchConnectionWidget()
+
+        // -----------------------------------------------------------------------
         // 1. HERO CARD: Systemic Recovery Index with physics-backed spring expansion
+
         //    Card bounding box scales outward on tap; arc sweep animates via
         //    animate*AsState inside VulnerabilityTransitionOrchestrator.
         // -----------------------------------------------------------------------

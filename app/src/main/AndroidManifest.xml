@@ -77,5 +77,22 @@
             </intent-filter>
         </activity>
 
+        <!--
+            WatchDataReceiver: WearableListenerService that decodes 12-byte ByteBuffer
+            packets from the :wear module on path /biometrics/ppg.
+            MessageClient guarantees ordered delivery for real-time biometric streams.
+        -->
+        <service
+            android:name=".data.WatchDataReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/biometrics" />
+            </intent-filter>
+        </service>
+
     </application>
 </manifest>
