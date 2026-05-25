@@ -79,6 +79,7 @@ dependencies {
     // AndroidX & Core
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -116,6 +117,11 @@ dependencies {
 
     // Google MediaPipe Tasks Vision for on-device AI computer vision (v0.10.x)
     implementation("com.google.mediapipe:tasks-vision:0.10.14")
+
+    // Google MediaPipe Tasks GenAI — LLM Inference API for on-device Gemma 2B
+    // Powers the "Pull Gemma Model" feature in ProfileVaultTab
+    // Docs: https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/android
+    implementation("com.google.mediapipe:tasks-genai:0.10.22")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
