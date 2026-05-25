@@ -77,13 +77,5 @@
             </intent-filter>
         </activity>
 
-        <!-- ── Wearable Data Layer listener (receives byte payloads from watch) ── -->
-        <service
-            android:name=".data.WatchDataTransporter"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
-            </intent-filter>
-        </service>
     </application>
 </manifest>

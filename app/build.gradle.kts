@@ -53,6 +53,9 @@ android {
         jvmTarget = "17"
         freeCompilerArgs += listOf("-opt-in=androidx.health.connect.client.ExperimentalHealthConnectApi")
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
     buildFeatures {
         compose = true
     }

@@ -21,7 +21,7 @@ class WatchDataTransporter(
             // Register as MessageClient listener to capture raw binary payloads
             Wearable.getMessageClient(context).addListener(this)
             Log.d(TAG, "Wearable MessageClient listener bound for byte streams.")
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e(TAG, "Failed to register Wearable MessageClient listener: ${e.message}")
         }
     }
@@ -41,7 +41,7 @@ class WatchDataTransporter(
                 
                 // Route directly to vulnerability analyzer
                 onTelemetryReceived(rawEda, rawHR)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.e(TAG, "Failed to decode binary telemetry payload: ${e.message}")
             }
         } else if (path == SyncProtocols.PATH_WATCH_SQI) {
@@ -52,7 +52,7 @@ class WatchDataTransporter(
 
                 Log.i(TAG, "Binary SQI packet received: Path=$path -> SQI=$sqi")
                 onSqiReceived?.invoke(sqi)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.e(TAG, "Failed to decode binary SQI payload: ${e.message}")
             }
         }
@@ -62,7 +62,7 @@ class WatchDataTransporter(
         try {
             Wearable.getMessageClient(context).removeListener(this)
             Log.d(TAG, "Wearable MessageClient event listener unbound.")
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e(TAG, "Failed to unregister: ${e.message}")
         }
     }
