@@ -147,6 +147,19 @@ NeuralPulse establishes market leadership through two distinct core innovations:
   - Establishes a biosensor Hardware Abstraction Layer (`WearableSensorBridge.kt`).
   - Playback of pre-recorded clinical biometric CSV arrays (stress, sweat, hydration, and pulse intervals) allows developers to build, test, and run the entire ecosystem without requiring a physical watch.
 
+### Competitor Strategy Comparison Matrix
+
+| Capability Vector | Standard Consumer Platforms (Apple / Samsung Health) | Subscription Recovery Trackers (WHOOP / Oura) | Cloud Nutrition Logging (MyFitnessPal / Lose It) | **NeuralPulse Ecosystem** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Portion Volume Accuracy** | N/A | N/A | Low (Manual guesstimate bias) | **High** (MonoBite CVPR 3D monocular depth + local densities) |
+| **Multi-Food Plate Ingestions** | N/A | N/A | Manual list entry | **Automated** (YOLOv11-seg multi-item instance masks) |
+| **Barcode Packaged Scanning** | N/A | N/A | Database search lookup | **Integrated** (ZXing barcode reader + Open Food Facts API) |
+| **Clinical Glycemic Load** | N/A | N/A | Basic macro ratio estimates | **Clinical Grade** (University of Sydney GI database integration) |
+| **Edge-AI Architecture** | Centralized Cloud Sync | Centralized Cloud Sync | Remote Cloud Database API | **Edge-Native (On-Device GPU/NPU)** |
+| **Contributor Hardware Barrier** | High (locked to vendor hardware) | Closed proprietary source | Proprietary API locks | **Zero Barrier** (Biometric Emulator HAL playing back pre-recorded sensor streams) |
+| **Interoperability** | Basic Health Connect reads/writes | Cloud API syncing | Syncs weight and calorie aggregates | **Android 16 Health Connect FHIR (R4)** local client observation entry & PHR timeline sync |
+| **FDA Compliance** | Simple wellness logging | Subscription tracking, wellness trends | Calorie budgets | **2026 Guideline compliant "Systemic Recovery Budget"** wellness framing |
+
 ---
 
 ## Project Structure
