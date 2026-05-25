@@ -1,40 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.alphahealth.monitor">
 
-    <!-- Health Connect and Samsung Health permissions -->
-    <uses-permission android:name="android.permission.HEALTH_CONNECT_READ" />
-    <uses-permission android:name="android.permission.HEALTH_CONNECT_WRITE" />
+    <!-- ── Health Connect permissions (universal — all Android devices) ── -->
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
+    <uses-permission android:name="android.permission.health.WRITE_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.WRITE_STEPS" />
+
+    <!-- ── Activity recognition (step counting, sleep detection) ── -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
-    <uses-permission android:name="android.permission.BODY_SENSORS" />
+
+    <!-- ── Camera (MediaPipe food classification viewfinder) ── -->
     <uses-permission android:name="android.permission.CAMERA" />
-    
-    <!-- Internet permission for synchronization if required -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <!-- ── Internet (SmartThings automation, FHIR export if enabled) ── -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- ── Notifications (recovery alerts, Wear OS sync status) ── -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- ── Calendar (recovery block scheduling) ── -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+
+    <!-- ── Foreground service (long-running biometric pipeline) ── -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@android:mipmap/sym_def_app_icon"
         android:label="NeuralPulse"
         android:roundIcon="@android:mipmap/sym_def_app_icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.Dark"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:targetApi="31">
 
-        <!-- Samsung Health SDK client identification profile -->
-        <!-- SHA256 fingerprints are generated during developer registration in the Samsung Partner Portal -->
+        <!-- ── Samsung Health Data SDK client profile (optional) ── -->
+        <!-- Only active if samsung-health-data-api.aar is present in libs/.  -->
+        <!-- SHA-256 fingerprint is generated during Samsung Partner Portal    -->
+        <!-- registration. For dev/test, leave as placeholder — SDK dev mode   -->
+        <!-- bypasses the fingerprint check for debug builds.                  -->
         <meta-data
             android:name="com.samsung.android.health.data.client_id"
             android:value="YOUR_APPROVED_PARTNER_APP_SHA256_HERE" />
 
+        <!-- ── Health Connect activity intent (required for HC permissions) ── -->
+        <activity
+            android:name="androidx.health.connect.client.PermissionController"
+            android:exported="false"
+            tools:node="merge" />
+
+        <!-- ── Main Dashboard ── -->
         <activity
             android:name=".dashboard.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Material3.Dark">
+            android:theme="@style/Theme.Material3.Dark"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Deep-link from Health Connect permissions screen -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
         </activity>
+
+        <!-- ── Wearable Data Layer listener (receives byte payloads from watch) ── -->
+        <service
+            android:name=".data.WatchDataTransporter"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

@@ -2,6 +2,8 @@ package com.alphahealth.monitor.wear.sensor.filter
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class SignalQualityFilterTest {
 
@@ -23,10 +25,8 @@ class SignalQualityFilterTest {
 
     @Test
     fun testCalculateSignalQualityIndex_ValidPhysiologicalRange() {
-        // A normal-like distribution (or standard sinusoids with slight variations)
-        // exhibits kurtosis in the target range (2.8 to 5.2)
         val data = FloatArray(75)
-        // Let's generate a mock clean PPG-like signal (sine wave + small offset)
+        // Let's generate a mock clean PPG-like sine wave (sine wave + offset)
         for (i in 0 until 75) {
             data[i] = kotlin.math.sin(i * 0.4f) * 10f + 100f
         }
@@ -34,17 +34,38 @@ class SignalQualityFilterTest {
         // For a pure sine wave, Kurtosis is ~1.5 (outside 2.8..5.2). It should return 0.0.
         assertEquals(0.0, sqi, 0.001)
 
-        // Let's generate random normal distribution samples (which have kurtosis ~ 3.0)
-        // We can approximate a normal distribution using Central Limit Theorem (sum of uniform variables)
+        // Generate normal-like distribution samples and verify their Kurtosis before assertions.
+        // Bounded loop search over random states to guarantee we find a valid physiological Kurtosis [2.8..5.2].
         val normalData = FloatArray(75)
-        val random = java.util.Random(42)
-        for (i in 0 until 75) {
-            var sum = 0f
-            for (j in 0 until 12) {
-                sum += random.nextFloat()
+        val random = java.util.Random(10)
+        var foundValidSignal = false
+        var attempts = 0
+        
+        while (attempts < 500) {
+            for (i in 0 until 75) {
+                var sum = 0f
+                for (j in 0 until 12) {
+                    sum += random.nextFloat()
+                }
+                normalData[i] = sum - 6f // CLT approximation of Gaussian
             }
-            normalData[i] = sum - 6f // Mean 0, Variance 1
+            
+            // Check Kurtosis of generated data
+            val mean = normalData.average()
+            val variance = normalData.map { (it - mean).pow(2) }.average()
+            val stdDev = sqrt(variance)
+            if (stdDev > 0.0) {
+                val kurtosis = normalData.map { ((it - mean) / stdDev).pow(4) }.average()
+                if (kurtosis in 2.8..5.2) {
+                    foundValidSignal = true
+                    break
+                }
+            }
+            attempts++
         }
+
+        // Assert we successfully generated a signal with a valid Kurtosis
+        org.junit.Assert.assertTrue(foundValidSignal)
 
         val normalSqi = filter.calculateSignalQualityIndex(normalData)
         // A standard normal distribution has kurtosis close to 3.0, which falls in 2.8..5.2.
