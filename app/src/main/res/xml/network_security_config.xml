@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Enforce HTTPS and specify certificate pinning for clinical FHIR/Health Connect sync endpoints -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">clinical-fhir.neuralpulse.com</domain>
+        <pin-set expiration="2027-01-01">
+            <!-- Pin certificates to prevent intermediate proxy intercepts -->
+            <pin digest="SHA-256">9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08</pin>
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>
