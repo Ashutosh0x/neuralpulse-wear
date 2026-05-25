@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralPulse — Watch Connection Screen</title>
+    <meta name="description" content="NeuralPulse 3D Galaxy Watch connection screen with real-time biometric streaming visualization.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Three.js r160 -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <style>
+        :root {
+            --bg: #050507;
+            --card: #0c0c0f;
+            --card-border: #1a1a20;
+            --blue: #3B82F6;
+            --blue-dim: rgba(59, 130, 246, 0.12);
+            --mint: #10B981;
+            --mint-dim: rgba(16, 185, 129, 0.12);
+            --amber: #F59E0B;
+            --amber-dim: rgba(245, 158, 11, 0.12);
+            --coral: #F87171;
+            --text-primary: #F1F3F5;
+            --text-secondary: #6B7280;
+            --text-dim: #3D4047;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Outfit', -apple-system, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+
+        /* ===== AMBIENT BACKGROUND ===== */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.35;
+            transition: opacity 1.5s ease, background 2s ease;
+        }
+        .orb-1 { width: 500px; height: 500px; top: -120px; left: -100px; background: radial-gradient(circle, rgba(59,130,246,0.3), transparent 70%); }
+        .orb-2 { width: 400px; height: 400px; bottom: -80px; right: -60px; background: radial-gradient(circle, rgba(16,185,129,0.25), transparent 70%); }
+
+        /* ===== LAYOUT ===== */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        /* ===== HEADER ===== */
+        .page-header {
+            text-align: center;
+            max-width: 640px;
+        }
+        .page-header h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #fff 20%, var(--blue) 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.4rem;
+        }
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        /* ===== MAIN GRID ===== */
+        .connection-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            width: 100%;
+            align-items: start;
+        }
+        @media (max-width: 960px) {
+            .connection-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== 3D VIEWPORT ===== */
+        .viewport-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            overflow: hidden;
+            position: relative;
+        }
+        #three-canvas {
+            width: 100%;
+            height: 560px;
+            display: block;
+            cursor: grab;
+        }
+        #three-canvas:active { cursor: grabbing; }
+
+        .viewport-badge {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            background: rgba(12,12,15,0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 0.65rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .viewport-badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--mint);
+            box-shadow: 0 0 6px var(--mint);
+            animation: pulse-dot 1.5s ease infinite alternate;
+        }
+        @keyframes pulse-dot {
+            0% { opacity: 0.5; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .glb-status-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(12,12,15,0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-dim);
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sidebar-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.4rem;
+        }
+
+        .sidebar-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        /* === Connection State === */
+        .state-machine-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .state-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .state-step::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .state-step.active {
+            border-color: var(--blue);
+        }
+        .state-step.active::before {
+            opacity: 1;
+            background: linear-gradient(135deg, var(--blue-dim), transparent);
+        }
+        .state-step.completed .step-icon {
+            background: var(--mint-dim);
+            color: var(--mint);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        .state-step.active .step-icon {
+            background: var(--blue-dim);
+            color: var(--blue);
+            border-color: rgba(59, 130, 246, 0.4);
+            animation: icon-pulse 1.5s ease infinite;
+        }
+        @keyframes icon-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+        }
+
+        .step-icon {
+            width: 32px; height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--card-border);
+            color: var(--text-dim);
+            transition: all 0.5s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-text {
+            position: relative;
+            z-index: 1;
+        }
+        .step-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: color 0.4s ease;
+        }
+        .state-step.active .step-label,
+        .state-step.completed .step-label { color: var(--text-primary); }
+
+        .step-sub {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 1px;
+            transition: color 0.4s ease;
+        }
+        .state-step.active .step-sub { color: var(--blue); }
+        .state-step.completed .step-sub { color: var(--mint); }
+
+        /* === Biometric Readouts === */
+        .bio-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+        .bio-cell {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 0.8rem;
+            transition: all 0.4s ease;
+        }
+        .bio-cell.live {
+            border-color: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.03);
+        }
+        .bio-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+        }
+        .bio-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+        .bio-unit {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* === Connection Button === */
+        .connect-btn {
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .connect-btn.start {
+            background: linear-gradient(135deg, #2563EB, #3B82F6);
+            color: white;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+        .connect-btn.start:hover {
+            box-shadow: 0 6px 30px rgba(59, 130, 246, 0.5);
+            transform: translateY(-1px);
+        }
+        .connect-btn.scanning {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: var(--blue);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .connect-btn.streaming {
+            background: linear-gradient(135deg, #064e3b, #065f46);
+            color: var(--mint);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .connect-btn.disconnect {
+            background: rgba(248, 113, 113, 0.1);
+            color: var(--coral);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+
+        /* === Signal Waveform Canvas === */
+        .waveform-container {
+            width: 100%;
+            height: 60px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+        }
+        #waveform-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ===== FOOTER BACK LINK ===== */
+        .back-link {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s ease;
+            align-self: flex-start;
+        }
+        .back-link:hover { color: var(--blue); }
+
+        /* ===== SPINNER ===== */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            width: 14px; height: 14px;
+            border: 2px solid transparent;
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-orb orb-1" id="ambientOrb1"></div>
+    <div class="ambient-orb orb-2" id="ambientOrb2"></div>
+
+    <div class="page-wrapper">
+
+        <a href="index.html" class="back-link" id="back-link">← Back to Ecosystem Simulator</a>
+
+        <div class="page-header">
+            <h1>Watch Connection</h1>
+            <p>Real-time Bluetooth pairing and biometric telemetry bridge between Galaxy Watch and NeuralPulse companion.</p>
+        </div>
+
+        <div class="connection-layout">
+
+            <!-- LEFT: 3D Viewport -->
+            <div class="viewport-card">
+                <canvas id="three-canvas"></canvas>
+                <div class="viewport-badge">
+                    <span class="dot" id="render-dot"></span>
+                    <span id="fps-counter">60 FPS</span>
+                    <span>•</span>
+                    <span id="renderer-info">Three.js r160 / WebGL2</span>
+                </div>
+                <div class="glb-status-badge" id="glb-status">
+                    PROCEDURAL MODE — Drop .glb to load
+                </div>
+            </div>
+
+            <!-- RIGHT: Sidebar -->
+            <div class="sidebar">
+
+                <!-- Connection State Machine -->
+                <div class="sidebar-card">
+                    <div class="sidebar-title">Connection State Machine</div>
+                    <div class="state-machine-visual">
+                        <div class="state-step" id="step-offline">
+                            <div class="step-icon">⏻</div>
+                            <div class="step-text">
+                                <div class="step-label">Offline</div>
+                                <div class="step-sub">No devices nearby</div>
+                            </div>
+                        </div>
+                        <div class="state-step" id="step-scanning">
+                            <div class="step-icon">📡</div>
+                            <div class="step-text">
+                                <div class="step-label">Scanning</div>
+                                <div class="step-sub">CapabilityClient poll…</div>
+                            </div>
+                        </div>
+                        <div class="state-step" id="step-found">
+                            <div class="step-icon">🔍</div>
+                            <div class="step-text">
+                                <div class="step-label">Found</div>
+                                <div class="step-sub">FILTER_REACHABLE match</div>
+                            </div>
+                        </div>
+                        <div class="state-step" id="step-pairing">
+                            <div class="step-icon">🔗</div>
+                            <div class="step-text">
+                                <div class="step-label">Pairing</div>
+                                <div class="step-sub">Handshake negotiation</div>
+                            </div>
+                        </div>
+                        <div class="state-step" id="step-streaming">
+                            <div class="step-icon">📶</div>
+                            <div class="step-text">
+                                <div class="step-label">Streaming</div>
+                                <div class="step-sub">12-byte BioFrame @ 25Hz</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Biometric Readouts -->
+                <div class="sidebar-card" id="bio-card">
+                    <div class="sidebar-title">Live Biometric Telemetry</div>
+                    <div class="bio-grid">
+                        <div class="bio-cell" id="cell-hr">
+                            <div class="bio-label">Heart Rate</div>
+                            <div class="bio-value" id="bio-hr">--</div>
+                            <div class="bio-unit">BPM</div>
+                        </div>
+                        <div class="bio-cell" id="cell-eda">
+                            <div class="bio-label">EDA</div>
+                            <div class="bio-value" id="bio-eda">--</div>
+                            <div class="bio-unit">µS</div>
+                        </div>
+                        <div class="bio-cell" id="cell-sqi">
+                            <div class="bio-label">Signal Quality</div>
+                            <div class="bio-value" id="bio-sqi">--</div>
+                            <div class="bio-unit">SQI Index</div>
+                        </div>
+                        <div class="bio-cell" id="cell-ppg">
+                            <div class="bio-label">PPG Wave</div>
+                            <div class="bio-value" id="bio-ppg">--</div>
+                            <div class="bio-unit">amplitude</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Waveform -->
+                <div class="sidebar-card" id="waveform-card" style="padding-bottom:1rem;">
+                    <div class="sidebar-title">PPG Signal Waveform</div>
+                    <div class="waveform-container">
+                        <canvas id="waveform-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Connect Button -->
+                <button class="connect-btn start" id="connect-btn" onclick="handleConnectClick()">
+                    Begin Watch Discovery
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // ============================================================
+        //  STATE MACHINE
+        // ============================================================
+        const STATES = ['OFFLINE', 'SCANNING', 'FOUND', 'PAIRING', 'STREAMING'];
+        let currentStateIndex = 0;
+        let isConnecting = false;
+        let streamingTime = 0;
+
+        // ============================================================
+        //  BIOMETRIC SIM DATA
+        // ============================================================
+        let simHR = 0, simEDA = 0, simSQI = 0, simPPG = 0;
+        const ppgHistory = new Float32Array(200).fill(0);
+        let ppgWriteHead = 0;
+
+        // ============================================================
+        //  THREE.JS SCENE SETUP
+        // ============================================================
+        const canvas = document.getElementById('three-canvas');
+        const renderer = new THREE.WebGLRenderer({
+            canvas,
+            antialias: true,
+            alpha: true,
+            powerPreference: 'high-performance'
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.1;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050507, 0.08);
+
+        const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+        camera.position.set(0, 0.6, 3.8);
+
+        const controls = new OrbitControls(camera, canvas);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.enablePan = false;
+        controls.minDistance = 2.5;
+        controls.maxDistance = 6;
+        controls.maxPolarAngle = Math.PI * 0.65;
+        controls.minPolarAngle = Math.PI * 0.3;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.8;
+
+        // ============================================================
+        //  LIGHTING
+        // ============================================================
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+        scene.add(ambientLight);
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+        keyLight.position.set(3, 5, 4);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.set(1024, 1024);
+        scene.add(keyLight);
+
+        const rimLight = new THREE.DirectionalLight(0x3B82F6, 0.6);
+        rimLight.position.set(-3, 2, -2);
+        scene.add(rimLight);
+
+        const fillLight = new THREE.PointLight(0x10B981, 0.4, 10);
+        fillLight.position.set(0, -1, 2);
+        scene.add(fillLight);
+
+        // Environment map for reflections
+        const cubeRenderTarget = new THREE.WebGLCubeRenderTarget(128);
+        const cubeCamera = new THREE.CubeCamera(0.1, 10, cubeRenderTarget);
+        scene.add(cubeCamera);
+
+        // ============================================================
+        //  PROCEDURAL GALAXY WATCH MODEL
+        // ============================================================
+        const watchGroup = new THREE.Group();
+        scene.add(watchGroup);
+
+        // --- Watch body (outer case) ---
+        const bodyGeo = new THREE.CylinderGeometry(0.85, 0.85, 0.18, 64);
+        const bodyMat = new THREE.MeshStandardMaterial({
+            color: 0x1c1c1e,
+            metalness: 0.95,
+            roughness: 0.15,
+        });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.castShadow = true;
+        body.receiveShadow = true;
+        watchGroup.add(body);
+
+        // --- Bezel ring (rotating bezel) ---
+        const bezelGeo = new THREE.TorusGeometry(0.82, 0.04, 16, 64);
+        const bezelMat = new THREE.MeshStandardMaterial({
+            color: 0x3a3a3c,
+            metalness: 0.98,
+            roughness: 0.1,
+        });
+        const bezel = new THREE.Mesh(bezelGeo, bezelMat);
+        bezel.rotation.x = Math.PI / 2;
+        bezel.position.y = 0.09;
+        watchGroup.add(bezel);
+
+        // --- Inner bezel accent ring ---
+        const innerBezelGeo = new THREE.TorusGeometry(0.78, 0.015, 16, 64);
+        const innerBezelMat = new THREE.MeshStandardMaterial({
+            color: 0x3B82F6,
+            metalness: 0.9,
+            roughness: 0.2,
+            emissive: 0x3B82F6,
+            emissiveIntensity: 0.0,
+        });
+        const innerBezel = new THREE.Mesh(innerBezelGeo, innerBezelMat);
+        innerBezel.rotation.x = Math.PI / 2;
+        innerBezel.position.y = 0.092;
+        watchGroup.add(innerBezel);
+
+        // --- AMOLED Watch Face (dynamic texture) ---
+        const faceCanvas = document.createElement('canvas');
+        faceCanvas.width = 512;
+        faceCanvas.height = 512;
+        const faceCtx = faceCanvas.getContext('2d');
+        const faceTexture = new THREE.CanvasTexture(faceCanvas);
+        faceTexture.colorSpace = THREE.SRGBColorSpace;
+
+        const faceGeo = new THREE.CircleGeometry(0.74, 64);
+        const faceMat = new THREE.MeshStandardMaterial({
+            map: faceTexture,
+            metalness: 0.1,
+            roughness: 0.5,
+            emissive: 0xffffff,
+            emissiveMap: faceTexture,
+            emissiveIntensity: 0.6,
+        });
+        const face = new THREE.Mesh(faceGeo, faceMat);
+        face.rotation.x = -Math.PI / 2;
+        face.position.y = 0.092;
+        watchGroup.add(face);
+
+        // --- Glass cover (transparent dome) ---
+        const glassGeo = new THREE.SphereGeometry(0.76, 64, 32, 0, Math.PI * 2, 0, 0.25);
+        const glassMat = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            metalness: 0.0,
+            roughness: 0.05,
+            transmission: 0.95,
+            thickness: 0.05,
+            ior: 1.52,
+            transparent: true,
+            opacity: 0.15,
+        });
+        const glass = new THREE.Mesh(glassGeo, glassMat);
+        glass.rotation.x = -Math.PI;
+        glass.position.y = 0.09;
+        watchGroup.add(glass);
+
+        // --- Side button ---
+        const btnGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.12, 16);
+        const btnMat = new THREE.MeshStandardMaterial({ color: 0x2c2c2e, metalness: 0.95, roughness: 0.15 });
+        const sideBtn = new THREE.Mesh(btnGeo, btnMat);
+        sideBtn.rotation.z = Math.PI / 2;
+        sideBtn.position.set(0.9, 0.02, 0);
+        watchGroup.add(sideBtn);
+
+        // --- Watch band (top) ---
+        const bandGeo = new THREE.BoxGeometry(0.42, 0.06, 1.1);
+        const bandMat = new THREE.MeshStandardMaterial({
+            color: 0x1a1a1a,
+            metalness: 0.1,
+            roughness: 0.85,
+        });
+        const bandTop = new THREE.Mesh(bandGeo, bandMat);
+        bandTop.position.set(0, 0, -1.1);
+        bandTop.castShadow = true;
+        watchGroup.add(bandTop);
+
+        const bandBot = bandTop.clone();
+        bandBot.position.set(0, 0, 1.1);
+        watchGroup.add(bandBot);
+
+        // --- Tilt the watch for a hero angle ---
+        watchGroup.rotation.x = -0.35;
+        watchGroup.rotation.z = 0.05;
+        watchGroup.position.y = -0.1;
+
+        // ============================================================
+        //  BLUETOOTH PARTICLES
+        // ============================================================
+        const particleCount = 120;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        const particleSpeeds = new Float32Array(particleCount);
+        const particleAngles = new Float32Array(particleCount);
+        const particleRadii = new Float32Array(particleCount);
+
+        for (let i = 0; i < particleCount; i++) {
+            particleAngles[i] = Math.random() * Math.PI * 2;
+            particleRadii[i] = 1.2 + Math.random() * 1.5;
+            particleSpeeds[i] = 0.3 + Math.random() * 0.6;
+            const y = (Math.random() - 0.5) * 1.2;
+            particlePositions[i * 3] = Math.cos(particleAngles[i]) * particleRadii[i];
+            particlePositions[i * 3 + 1] = y;
+            particlePositions[i * 3 + 2] = Math.sin(particleAngles[i]) * particleRadii[i];
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+
+        const particleMat = new THREE.PointsMaterial({
+            color: 0x3B82F6,
+            size: 0.03,
+            transparent: true,
+            opacity: 0,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+        });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // ============================================================
+        //  PULSING RINGS (connection effect)
+        // ============================================================
+        const rings = [];
+        for (let i = 0; i < 3; i++) {
+            const ringGeo = new THREE.RingGeometry(0.88 + i * 0.25, 0.9 + i * 0.25, 64);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0x3B82F6,
+                transparent: true,
+                opacity: 0,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+            });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.1;
+            scene.add(ring);
+            rings.push({ mesh: ring, phase: i * (Math.PI * 2 / 3) });
+        }
+
+        // ============================================================
+        //  GROUND PLANE (subtle reflection)
+        // ============================================================
+        const groundGeo = new THREE.PlaneGeometry(20, 20);
+        const groundMat = new THREE.MeshStandardMaterial({
+            color: 0x050507,
+            metalness: 0.5,
+            roughness: 0.8,
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.8;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // ============================================================
+        //  GLB LOADER (ready for real model)
+        // ============================================================
+        const gltfLoader = new GLTFLoader();
+        let glbModel = null;
+
+        // Drag & drop GLB support
+        canvas.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); });
+        canvas.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.glb')) {
+                const url = URL.createObjectURL(file);
+                loadGLBModel(url, file.name);
+            }
+        });
+
+        function loadGLBModel(url, name) {
+            document.getElementById('glb-status').textContent = `LOADING: ${name}…`;
+            gltfLoader.load(url, (gltf) => {
+                // Remove procedural model
+                watchGroup.children.forEach(c => { c.visible = false; });
+                
+                glbModel = gltf.scene;
+                glbModel.scale.setScalar(0.4);
+                glbModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                watchGroup.add(glbModel);
+                document.getElementById('glb-status').textContent = `GLB LOADED: ${name}`;
+                document.getElementById('glb-status').style.color = 'var(--mint)';
+            }, undefined, (err) => {
+                document.getElementById('glb-status').textContent = `ERROR: ${err.message}`;
+                document.getElementById('glb-status').style.color = 'var(--coral)';
+            });
+        }
+
+        // ============================================================
+        //  WATCH FACE TEXTURE RENDERER
+        // ============================================================
+        function renderWatchFace(time) {
+            const ctx = faceCtx;
+            const s = 512;
+            const cx = s / 2, cy = s / 2;
+            const r = s * 0.46;
+
+            // Clear
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, s, s);
+
+            // Circular clip
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.clip();
+
+            // AMOLED black face
+            ctx.fillStyle = '#08080a';
+            ctx.fillRect(0, 0, s, s);
+
+            const state = STATES[currentStateIndex];
+
+            if (state === 'OFFLINE') {
+                // Dim watch face with time
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 90px "Space Grotesk", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('10:09', cx, cy + 10);
+                ctx.fillStyle = '#6B7280';
+                ctx.font = '500 22px "Outfit", sans-serif';
+                ctx.fillText('Mon, May 25', cx, cy + 50);
+                // NeuralPulse dim
+                ctx.fillStyle = '#2a2a30';
+                ctx.font = '600 16px "JetBrains Mono", monospace';
+                ctx.fillText('NEURALPULSE', cx, cy - 80);
+            } else if (state === 'SCANNING') {
+                // Scanning animation
+                ctx.fillStyle = '#3B82F6';
+                ctx.font = '700 18px "Space Grotesk", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('SCANNING', cx, cy - 50);
+                // Animated radar sweep
+                const sweepAngle = (time * 0.002) % (Math.PI * 2);
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 3; i++) {
+                    const ringR = 40 + i * 35;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy + 20, ringR, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                // Sweep line
+                ctx.strokeStyle = '#3B82F6';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + 20);
+                ctx.lineTo(cx + Math.cos(sweepAngle) * 110, cy + 20 + Math.sin(sweepAngle) * 110);
+                ctx.stroke();
+                // Dot at center
+                ctx.fillStyle = '#3B82F6';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 20, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (state === 'FOUND') {
+                ctx.fillStyle = '#F59E0B';
+                ctx.font = '700 20px "Space Grotesk", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('DEVICE FOUND', cx, cy - 40);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '500 16px "Outfit", sans-serif';
+                ctx.fillText('Galaxy Watch 6', cx, cy);
+                ctx.fillStyle = '#6B7280';
+                ctx.font = '400 14px "JetBrains Mono", monospace';
+                ctx.fillText('NeuralPulse:wear', cx, cy + 30);
+                // Pulsing circle
+                const pulseR = 60 + Math.sin(time * 0.005) * 10;
+                ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(cx, cy + 70, pulseR, 0, Math.PI * 2);
+                ctx.stroke();
+            } else if (state === 'PAIRING') {
+                // Pairing handshake animation
+                ctx.fillStyle = '#3B82F6';
+                ctx.font = '700 20px "Space Grotesk", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('PAIRING', cx, cy - 50);
+                // Animated lock icon effect
+                const lockPhase = Math.sin(time * 0.004);
+                ctx.fillStyle = `rgba(59, 130, 246, ${0.5 + lockPhase * 0.3})`;
+                ctx.font = '48px serif';
+                ctx.fillText('🔗', cx, cy + 20);
+                // Progress bar
+                const progress = Math.min(1, ((time % 4000) / 4000));
+                ctx.fillStyle = '#1a1a2e';
+                const barW = 200, barH = 8, barX = cx - barW/2, barY = cy + 60;
+                ctx.fillRect(barX, barY, barW, barH);
+                const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+                grad.addColorStop(0, '#2563EB');
+                grad.addColorStop(1, '#3B82F6');
+                ctx.fillStyle = grad;
+                ctx.fillRect(barX, barY, barW * progress, barH);
+            } else if (state === 'STREAMING') {
+                // Live biometric display
+                ctx.fillStyle = '#10B981';
+                ctx.font = '600 14px "JetBrains Mono", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('● STREAMING', cx, cy - 90);
+
+                // HR large
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 80px "JetBrains Mono", monospace';
+                ctx.fillText(simHR > 0 ? `${simHR}` : '--', cx, cy + 5);
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = '500 20px "Outfit", sans-serif';
+                ctx.fillText('BPM', cx, cy + 35);
+
+                // Mini waveform on watch face
+                ctx.strokeStyle = '#10B981';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                const waveW = 200, waveY = cy + 70;
+                for (let i = 0; i < 60; i++) {
+                    const idx = (ppgWriteHead - 60 + i + ppgHistory.length) % ppgHistory.length;
+                    const x = (cx - waveW/2) + (i / 59) * waveW;
+                    const y = waveY - ppgHistory[idx] * 20;
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // EDA readout
+                ctx.fillStyle = '#10B981';
+                ctx.font = '500 14px "JetBrains Mono", monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(`EDA: ${simEDA.toFixed(2)} µS`, cx - r * 0.7, cy + r * 0.7);
+            }
+
+            ctx.restore();
+            faceTexture.needsUpdate = true;
+        }
+
+        // ============================================================
+        //  WAVEFORM CANVAS
+        // ============================================================
+        const wfCanvas = document.getElementById('waveform-canvas');
+        const wfCtx = wfCanvas.getContext('2d');
+
+        function resizeWaveform() {
+            const rect = wfCanvas.parentElement.getBoundingClientRect();
+            wfCanvas.width = rect.width;
+            wfCanvas.height = rect.height;
+        }
+        resizeWaveform();
+        window.addEventListener('resize', resizeWaveform);
+
+        function renderWaveform() {
+            const w = wfCanvas.width, h = wfCanvas.height;
+            wfCtx.fillStyle = 'rgba(0,0,0,0.3)';
+            wfCtx.fillRect(0, 0, w, h);
+
+            if (STATES[currentStateIndex] !== 'STREAMING') return;
+
+            wfCtx.strokeStyle = '#10B981';
+            wfCtx.lineWidth = 2;
+            wfCtx.shadowBlur = 4;
+            wfCtx.shadowColor = '#10B981';
+            wfCtx.beginPath();
+
+            const len = ppgHistory.length;
+            for (let i = 0; i < len; i++) {
+                const idx = (ppgWriteHead + i) % len;
+                const x = (i / len) * w;
+                const y = h / 2 - ppgHistory[idx] * (h * 0.35);
+                if (i === 0) wfCtx.moveTo(x, y); else wfCtx.lineTo(x, y);
+            }
+            wfCtx.stroke();
+            wfCtx.shadowBlur = 0;
+        }
+
+        // ============================================================
+        //  RESIZE HANDLER
+        // ============================================================
+        function onResize() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const w = rect.width;
+            const h = 560;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+            resizeWaveform();
+        }
+        window.addEventListener('resize', onResize);
+        onResize();
+
+        // ============================================================
+        //  ANIMATION LOOP
+        // ============================================================
+        const clock = new THREE.Clock();
+        let frameCount = 0;
+        let lastFpsTime = 0;
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            const elapsed = clock.getElapsedTime();
+            controls.update();
+
+            // FPS counter
+            frameCount++;
+            if (time - lastFpsTime > 1000) {
+                document.getElementById('fps-counter').textContent = `${frameCount} FPS`;
+                frameCount = 0;
+                lastFpsTime = time;
+            }
+
+            const state = STATES[currentStateIndex];
+
+            // --- Bezel ring color ---
+            const bezelColors = {
+                OFFLINE: 0x3a3a3c,
+                SCANNING: 0x3B82F6,
+                FOUND: 0xF59E0B,
+                PAIRING: 0x3B82F6,
+                STREAMING: 0x10B981,
+            };
+            const targetColor = new THREE.Color(bezelColors[state]);
+            innerBezelMat.color.lerp(targetColor, 0.05);
+            innerBezelMat.emissive.lerp(targetColor, 0.05);
+
+            // Emissive intensity based on state
+            const targetEmissive = state === 'OFFLINE' ? 0 : state === 'STREAMING' ? 0.8 : 0.5;
+            innerBezelMat.emissiveIntensity += (targetEmissive - innerBezelMat.emissiveIntensity) * 0.05;
+
+            // --- Particle animation ---
+            const targetParticleOpacity = (state === 'SCANNING' || state === 'PAIRING') ? 0.6 : state === 'STREAMING' ? 0.3 : 0;
+            particleMat.opacity += (targetParticleOpacity - particleMat.opacity) * 0.05;
+
+            if (particleMat.opacity > 0.01) {
+                const positions = particleGeo.attributes.position.array;
+                for (let i = 0; i < particleCount; i++) {
+                    particleAngles[i] += particleSpeeds[i] * delta * 0.5;
+                    positions[i * 3] = Math.cos(particleAngles[i]) * particleRadii[i];
+                    positions[i * 3 + 2] = Math.sin(particleAngles[i]) * particleRadii[i];
+                    positions[i * 3 + 1] += Math.sin(elapsed * 2 + i) * 0.002;
+                }
+                particleGeo.attributes.position.needsUpdate = true;
+            }
+
+            // --- Pulsing rings ---
+            const showRings = state === 'SCANNING' || state === 'PAIRING';
+            rings.forEach(({ mesh, phase }) => {
+                if (showRings) {
+                    const p = (elapsed * 1.5 + phase) % (Math.PI * 2);
+                    const scale = 1 + Math.sin(p) * 0.3;
+                    mesh.scale.set(scale, scale, 1);
+                    mesh.material.opacity = Math.max(0, 0.25 * (1 - Math.sin(p) * 0.5));
+                } else {
+                    mesh.material.opacity *= 0.95;
+                }
+            });
+
+            // --- Streaming: simulate biometrics ---
+            if (state === 'STREAMING') {
+                streamingTime += delta;
+                simHR = Math.round(68 + Math.sin(streamingTime * 0.3) * 8 + Math.sin(streamingTime * 0.7) * 3);
+                simEDA = 1.6 + Math.sin(streamingTime * 0.2) * 0.5 + Math.sin(streamingTime * 0.5) * 0.2;
+                simSQI = Math.min(1, 0.85 + Math.sin(streamingTime * 0.15) * 0.1);
+                const ppgVal = Math.sin(streamingTime * 2.5) * 0.8 + Math.sin(streamingTime * 5.1) * 0.2;
+                simPPG = ppgVal;
+                ppgHistory[ppgWriteHead] = ppgVal;
+                ppgWriteHead = (ppgWriteHead + 1) % ppgHistory.length;
+
+                // Update DOM readouts
+                document.getElementById('bio-hr').textContent = simHR;
+                document.getElementById('bio-eda').textContent = simEDA.toFixed(2);
+                document.getElementById('bio-sqi').textContent = (simSQI * 100).toFixed(0) + '%';
+                document.getElementById('bio-ppg').textContent = simPPG.toFixed(2);
+
+                // Mark cells as live
+                document.querySelectorAll('.bio-cell').forEach(c => c.classList.add('live'));
+
+                // Subtle watch breathing
+                const breathe = 1 + Math.sin(elapsed * 1.5) * 0.008;
+                watchGroup.scale.set(breathe, breathe, breathe);
+            } else {
+                document.querySelectorAll('.bio-cell').forEach(c => c.classList.remove('live'));
+                watchGroup.scale.set(1, 1, 1);
+            }
+
+            // --- Ambient orb color shift ---
+            const orb1 = document.getElementById('ambientOrb1');
+            const orb2 = document.getElementById('ambientOrb2');
+            if (state === 'STREAMING') {
+                orb1.style.background = 'radial-gradient(circle, rgba(16,185,129,0.3), transparent 70%)';
+                orb2.style.background = 'radial-gradient(circle, rgba(16,185,129,0.2), transparent 70%)';
+            } else if (state === 'SCANNING' || state === 'PAIRING') {
+                orb1.style.background = 'radial-gradient(circle, rgba(59,130,246,0.35), transparent 70%)';
+                orb2.style.background = 'radial-gradient(circle, rgba(59,130,246,0.2), transparent 70%)';
+            } else {
+                orb1.style.background = 'radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%)';
+                orb2.style.background = 'radial-gradient(circle, rgba(16,185,129,0.1), transparent 70%)';
+            }
+
+            renderWatchFace(time);
+            renderWaveform();
+            renderer.render(scene, camera);
+        }
+        requestAnimationFrame(animate);
+
+        // ============================================================
+        //  STATE MACHINE UI
+        // ============================================================
+        function updateStateUI() {
+            const state = STATES[currentStateIndex];
+            const stepIds = ['step-offline', 'step-scanning', 'step-found', 'step-pairing', 'step-streaming'];
+
+            stepIds.forEach((id, idx) => {
+                const el = document.getElementById(id);
+                el.classList.remove('active', 'completed');
+                if (idx < currentStateIndex) el.classList.add('completed');
+                if (idx === currentStateIndex) el.classList.add('active');
+            });
+
+            const btn = document.getElementById('connect-btn');
+            btn.className = 'connect-btn';
+
+            if (state === 'OFFLINE') {
+                btn.classList.add('start');
+                btn.textContent = 'Begin Watch Discovery';
+                btn.disabled = false;
+            } else if (state === 'SCANNING') {
+                btn.classList.add('scanning');
+                btn.innerHTML = '<span class="spinner"></span>  Scanning for NeuralPulse:wear…';
+                btn.disabled = true;
+            } else if (state === 'FOUND') {
+                btn.classList.add('scanning');
+                btn.textContent = 'Device Found — Initiating Pairing…';
+                btn.disabled = true;
+            } else if (state === 'PAIRING') {
+                btn.classList.add('scanning');
+                btn.innerHTML = '<span class="spinner"></span>  Negotiating Handshake…';
+                btn.disabled = true;
+            } else if (state === 'STREAMING') {
+                btn.classList.add('disconnect');
+                btn.textContent = 'Disconnect Watch';
+                btn.disabled = false;
+            }
+        }
+
+        window.handleConnectClick = function() {
+            const state = STATES[currentStateIndex];
+            if (state === 'OFFLINE' && !isConnecting) {
+                isConnecting = true;
+                advanceState();
+            } else if (state === 'STREAMING') {
+                // Disconnect
+                currentStateIndex = 0;
+                isConnecting = false;
+                streamingTime = 0;
+                simHR = 0; simEDA = 0; simSQI = 0; simPPG = 0;
+                ppgHistory.fill(0);
+                ppgWriteHead = 0;
+                document.getElementById('bio-hr').textContent = '--';
+                document.getElementById('bio-eda').textContent = '--';
+                document.getElementById('bio-sqi').textContent = '--';
+                document.getElementById('bio-ppg').textContent = '--';
+                updateStateUI();
+            }
+        };
+
+        function advanceState() {
+            if (currentStateIndex >= STATES.length - 1) {
+                isConnecting = false;
+                updateStateUI();
+                return;
+            }
+            currentStateIndex++;
+            updateStateUI();
+
+            // Auto-advance through intermediate states
+            const delays = {
+                SCANNING: 2500,
+                FOUND: 1500,
+                PAIRING: 3000,
+            };
+            const state = STATES[currentStateIndex];
+            if (delays[state]) {
+                setTimeout(advanceState, delays[state]);
+            }
+        }
+
+        // Initialize
+        updateStateUI();
+
+    </script>
+
+</body>
+</html>

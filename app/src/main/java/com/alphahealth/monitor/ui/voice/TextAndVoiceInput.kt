@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /**
  * Dual-mode input component that toggles between text keyboard and voice dictation.
@@ -132,7 +133,7 @@ fun TextAndVoiceInput(
                         onValueChange = { curTextInput = it },
                         textStyle = MaterialTheme.typography.bodyLarge.copy(
                             color = MaterialTheme.colorScheme.onSurface,
-                            letterSpacing = androidx.compose.ui.unit.sp(0.2f),
+                            letterSpacing = 0.2.sp,
                         ),
                         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                         modifier = Modifier

@@ -115,7 +115,6 @@ fun StreamingResponseText(
                     .clearAndSetSemantics {}
                     .graphicsLayer {
                         alpha = alpha2.value
-                        blendMode = BlendMode.Plus
                     },
             )
         }

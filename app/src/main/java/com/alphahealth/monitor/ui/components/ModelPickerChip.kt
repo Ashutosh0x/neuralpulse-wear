@@ -109,11 +109,7 @@ fun ModelPickerChip(
                     )
 
                     // Initializing spinner overlay
-                    AnimatedVisibility(
-                        visible = currentModel.isInitializing,
-                        enter = scaleIn() + fadeIn(),
-                        exit = scaleOut() + fadeOut(),
-                    ) {
+                    if (currentModel.isInitializing) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp).alpha(0.5f),
                             strokeWidth = 2.dp,
