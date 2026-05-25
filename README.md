@@ -16,6 +16,7 @@ The ecosystem establishes a high-performance biometrics telemetry bridge:
 - **Watch Application (`:wear`)**: Runs natively on Wear OS 5+ / Samsung One UI 6 Watch+ smartwatches, connecting directly to the hardware sensor hub to stream raw high-frequency biometric data (PPG, ECG, EDA, and BIA).
 
 By running real-time digital signal processing (DSP) like 4th-order Butterworth filters and statistical Kurtosis validation directly on the watch edge before transmitting via the Wearable Data Layer API, NeuralPulse ensures zero-latency, clinical-grade health tracking without draining device batteries or compromising user privacy.
+<img width="2816" height="1536" alt="Gemini_Generated_Image_i13tt0i13tt0i13t" src="https://github.com/user-attachments/assets/c913bd18-db5a-48da-b10b-6d2f5b0ca908" />
 
 ---
 
