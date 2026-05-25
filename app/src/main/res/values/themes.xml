@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Material3.Dark" parent="android:Theme.DeviceDefault.NoActionBar">
+        <!-- Minimal placeholder for Compose-based UI -->
+        <item name="android:windowBackground">#0B0B0C</item> <!-- Deep Carbon background -->
+    </style>
+</resources>

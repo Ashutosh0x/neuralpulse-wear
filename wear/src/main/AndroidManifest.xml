@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.alphahealth.monitor.wear">
+
+    <!-- Permissions needed to access biometric and body sensors -->
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Feature flags indicating Wear OS usage -->
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@android:mipmap/sym_def_app_icon"
+        android:label="NeuralPulse wear"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NeuralPulse.Wear">
+        
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="true" />
+
+        <!-- Wear OS Dashboard Screen -->
+        <activity
+            android:name=".presentation.WatchDashboardActivity"
+            android:exported="true"
+            android:label="NeuralPulse wear"
+            android:theme="@style/Theme.NeuralPulse.Wear">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- AlphaHealth Tile Service -->
+        <service
+            android:name=".surfaces.AlphaHealthTileService"
+            android:exported="true"
+            android:label="NeuralPulse Stress Status"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@android:drawable/sym_def_app_icon" />
+        </service>
+
+        <!-- Energy Score Complication Service -->
+        <service
+            android:name=".surfaces.EnergyScoreComplication"
+            android:exported="true"
+            android:label="NeuralPulse Energy Score"
+            android:icon="@android:drawable/sym_def_app_icon"
+            android:permission="android.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="600" />
+        </service>
+    </application>
+</manifest>

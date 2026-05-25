@@ -1,0 +1,9 @@
+<resources>
+    <!-- One UI Watch Design Language Compliance -->
+    <style name="Theme.NeuralPulse.Wear" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">#000000</item> <!-- AMOLED Pure Black Guard -->
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#9CA3AF</item> <!-- Muted Slate Gray text -->
+        <item name="android:colorAccent">#3B82F6</item> <!-- Electric Blue primary highlight -->
+    </style>
+</resources>

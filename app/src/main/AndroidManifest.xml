@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.alphahealth.monitor">
+
+    <!-- Health Connect and Samsung Health permissions -->
+    <uses-permission android:name="android.permission.HEALTH_CONNECT_READ" />
+    <uses-permission android:name="android.permission.HEALTH_CONNECT_WRITE" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    
+    <!-- Internet permission for synchronization if required -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@android:mipmap/sym_def_app_icon"
+        android:label="NeuralPulse"
+        android:roundIcon="@android:mipmap/sym_def_app_icon"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Material3.Dark">
+
+        <!-- Samsung Health SDK client identification profile -->
+        <!-- SHA256 fingerprints are generated during developer registration in the Samsung Partner Portal -->
+        <meta-data
+            android:name="com.samsung.android.health.data.client_id"
+            android:value="YOUR_APPROVED_PARTNER_APP_SHA256_HERE" />
+
+        <activity
+            android:name=".dashboard.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Material3.Dark">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
