@@ -94,25 +94,7 @@ graph TD
 ## Premium One UI 6 & Material 3 Companion Experience
 
 The Mobile Companion App (`:app`) has been refactored to align with Samsung's modern **One UI 6** and **Material 3 Expressive (2026)** structural guidelines. The interface splits each tab into an upper **Viewing Area** (high-contrast, scannable data visualization) and a lower **Interaction Area** (tactile, 24dp rounded focus blocks containing touch controls).
-
-```
-┌────────────────────────────────────────┐
-│         Ecosystem Command              │  ◄── Clean, Thin Header
-├────────────────────────────────────────┤
-│  ┌──────────────────────────────────┐  │
-│  │    [ 65 / 100 ]   Moderate Strain│  │  ◄── Hero Card (Vulnerability Canvas Arc)
-│  └──────────────────────────────────┘  │
-│  ┌──────────────────────────────────┐  │
-│  │ Outlined notifications / alerts  │  │  ◄── Floating Status Banner (Muted Ruby)
-│  └──────────────────────────────────┘  │
-│  ┌──────────────────────────────────┐  │
-│  │ Outlined explainability card     │  │  ◄── Insights Card (Gemma Summary)
-│  └──────────────────────────────────┘  │
-│  ┌──────────────────────────────────┐  │
-│  │ Bio-Stream Telemetry (2x2 Grid)  │  │  ◄── Telemetry Card (Pill Grid Items)
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
-```
+![Ecosystem Command UI Mockup](docs/ecosystem_command_mockup.png)
 
 The user interface spans six specialized tabbed activities:
 
