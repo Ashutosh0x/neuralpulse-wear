@@ -46,6 +46,7 @@ import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Menu
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -392,61 +393,80 @@ fun DashboardScreen(
 ) {
     var activeTab by remember { mutableStateOf(0) }
     val condensedFontFamily = remember { VariableFontProvider.getFontFamily(weight = 800, width = 75f) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.background,
-                modifier = Modifier.statusBarsPadding()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+    AlphaAdminNavigationDrawer(
+        drawerState = drawerState,
+        onExportFhir = {
+            onGenerateReport()
+        },
+        onComplianceCheck = {
+            activeTab = 5
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.statusBarsPadding()
                 ) {
-                    Column {
-                        Text(
-                            text = "NEURALPULSE",
-                            style = TextStyle(
-                                fontFamily = condensedFontFamily,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.5.sp
-                            )
-                        )
-                        Text(
-                            text = "Ecosystem Command",
-                            style = TextStyle(
-                                fontFamily = condensedFontFamily,
-                                fontSize = 18.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Black
-                            )
-                        )
-                    }
-                    
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = onThemeToggle) {
-                            Icon(
-                                imageVector = if (darkTheme) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                                contentDescription = "Theme Toggle",
-                                tint = MaterialTheme.colorScheme.onSurface
+                        Column {
+                            Text(
+                                text = "NEURALPULSE",
+                                style = TextStyle(
+                                    fontFamily = condensedFontFamily,
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.5.sp
+                                )
+                            )
+                            Text(
+                                text = "Ecosystem Command",
+                                style = TextStyle(
+                                    fontFamily = condensedFontFamily,
+                                    fontSize = 18.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Black
+                                )
                             )
                         }
-
-                        Surface(
-                            color = when (connectionState) {
-                                is HealthDataManager.ConnectionState.Connected -> AlphaMintGreen
-                                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                            },
-                            shape = RoundedCornerShape(10.dp)
+                        
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            IconButton(onClick = onThemeToggle) {
+                                Icon(
+                                    imageVector = if (darkTheme) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
+                                    contentDescription = "Theme Toggle",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Menu,
+                                    contentDescription = "Open Administrative Settings",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            Surface(
+                                color = when (connectionState) {
+                                    is HealthDataManager.ConnectionState.Connected -> AlphaMintGreen
+                                    else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                },
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
                             Text(
                                 text = if (connectionState is HealthDataManager.ConnectionState.Connected) "Store Online" else "Store Offline",
                                 fontSize = 10.sp,
@@ -588,4 +608,5 @@ fun DashboardScreen(
             }
         }
     }
+}
 }
