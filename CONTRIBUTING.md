@@ -36,3 +36,12 @@ Thank you for contributing to the NeuralPulse project. To maintain clinical-grad
 
 * Any modification or addition to signal processing modules, digital filtering, wearable data sync protocols, or security managers **must** be accompanied by unit tests.
 * Ensure tests run successfully on local JVMs without requiring external hardware connections or full Android device setups.
+
+---
+
+## 4. No-Hardware Contribution Path & Local SDK Stubs
+
+To ensure OSS accessibility, you do not need proprietary Samsung wearable hardware or binary SDK files to contribute to NeuralPulse:
+1. **Samsung Health SDK Stubs**: Mirror stubs are included under `com.samsung.android.health.data.*` to allow compiling the project out-of-the-box without requiring proprietary `.aar` blobs.
+2. **Recorded Sensor Playback**: If you do not have a Galaxy Watch, compile using the `MockWearableSensorBridge` layer which feeds pre-recorded physiological streams into the telemetry engine. For full details on target device APIs and emulator setup, see [DEVICES.md](file:///docs/DEVICES.md).
+
