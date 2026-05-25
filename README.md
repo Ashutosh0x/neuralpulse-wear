@@ -113,7 +113,55 @@ NeuralPulse/
 
 ## Building the Ecosystem
 
-1. **Gradle Imports**: Ensure settings include :app, :wear, and :shared modules in settings.gradle.kts.
-2. **Local SDK Bindings**: Copy the proprietary Samsung SDK binaries (samsung-health-data-api.aar and samsung-health-sensor-api.aar) into the libs/ folder inside :app and :wear modules.
-3. **Ingest Vision Model**: Place your retrained model food_nutrition_v1.tflite inside app/src/main/assets/models/.
+1. **Gradle Imports**: Ensure settings include `:app`, `:wear`, and `:shared` modules in `settings.gradle.kts`.
+2. **Local SDK Bindings**: Copy the proprietary Samsung SDK binaries (`samsung-health-data-api.aar` and `samsung-health-sensor-api.aar`) into the `libs/` folder inside the `:app` and `:wear` modules.
+3. **Ingest Vision Model**: Place your retrained model `food_nutrition_v1.tflite` inside `app/src/main/assets/models/`.
 4. **Android Developer Mode**: Turn on Developer Mode inside Samsung Health on both testing devices to enable raw SDK sensor reads.
+
+---
+
+## CI/CD Pipeline & Automated Release Signing
+
+The project features a continuous integration pipeline configured in [build.yml](file:///.github/workflows/build.yml) that executes unit tests, builds debug and release APKs for both the phone companion app and the Wear OS watch app, and automatically generates GitHub Releases for pushes to the `master` branch.
+
+### Dynamic APK Signing Architecture
+
+To prevent build failures for contributors who do not possess the release keystore, the Gradle build scripts ([app/build.gradle.kts](file:///app/build.gradle.kts) and [wear/build.gradle.kts](file:///wear/build.gradle.kts)) use a dynamic signing configuration:
+- If `release.jks` exists in the module root directory, Gradle automatically signs the release build with it.
+- If `release.jks` is missing, Gradle compiles the release build without throwing an exception, outputting an unsigned release APK.
+- The CI pipeline standardizes outputs into `app-release-final.apk` and `wear-release-final.apk` to handle both signed and unsigned scenarios uniformly.
+
+### How to Configure Automated Releases & Signing
+
+To set up fully-signed automated releases in your repository, follow these steps:
+
+#### 1. Generate a Release Keystore
+Run the following JDK tool command locally to generate a new signing keystore:
+```bash
+keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias neuralpulse-key
+```
+Note down your keystore password, key alias, and key password.
+
+#### 2. Base64-Encode the Keystore
+Encode the binary `release.jks` file to a Base64 string to store it securely in GitHub:
+- **macOS/Linux**:
+  ```bash
+  base64 -i release.jks -o keystore.b64
+  cat keystore.b64
+  ```
+- **Windows (PowerShell)**:
+  ```powershell
+  [Convert]::ToBase64String([IO.File]::ReadAllBytes("release.jks")) | Out-File -FilePath keystore.b64
+  Get-Content keystore.b64
+  ```
+
+#### 3. Configure GitHub Repository Secrets
+Go to your GitHub repository, navigate to **Settings > Secrets and variables > Actions**, and add the following repository secrets:
+
+* `ANDROID_KEYSTORE_BASE64`: The full Base64-encoded string representing your keystore file.
+* `ANDROID_KEYSTORE_PASSWORD`: The password set for the keystore container.
+* `ANDROID_KEY_ALIAS`: The key alias (e.g., `neuralpulse-key`).
+* `ANDROID_KEY_PASSWORD`: The password set for the specific key alias.
+
+Once configured, any push to the `master` branch will trigger the pipeline, automatically decode the keystore, build signed APKs, and publish them directly to a release page on GitHub.
+
