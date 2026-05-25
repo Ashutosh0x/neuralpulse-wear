@@ -22,3 +22,5 @@ Thumbs.db
 *.apk
 *.aar
 *.jar
+!gradle-wrapper.jar
+
