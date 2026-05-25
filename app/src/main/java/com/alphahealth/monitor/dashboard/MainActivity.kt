@@ -414,6 +414,7 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0B0B0C))
+            .statusBarsPadding()
     ) {
         
         // ----------------------------------------------------

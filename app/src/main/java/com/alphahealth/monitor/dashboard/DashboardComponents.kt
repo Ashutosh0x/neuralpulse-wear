@@ -14,8 +14,8 @@ import androidx.compose.ui.unit.dp
 fun NeuralPulseDataCard(title: String, content: @Composable () -> Unit) {
     Card(
         shape = RoundedCornerShape(24.dp), // Enforces official One UI 6 structural rounding
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0B0B0C)), // Deep Carbon canvas (using 0xFF0B0B0C for full opacity)
-        modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth()
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF18181A)), // Elevated surface background
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             Text(
