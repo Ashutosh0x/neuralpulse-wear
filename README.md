@@ -143,9 +143,21 @@ NeuralPulse establishes market leadership through two distinct core innovations:
   - *Stage 2 (Monocular Depth Volume)*: Runs quantized MiDaS v3.1 TFLite depth map models to compute food volumes ($cm^3$) with a CV-winning Mean Absolute Percentage Error (MAPE) of 0.23, scaling grams using custom density tables ($g = cm^3 \times \text{density}$).
   - *Stage 3 (Clinical Glycemic Load)*: Maps carbs against the global gold-standard University of Sydney database to calculate accurate Glycemic Load:
     $$\text{GL} = \frac{\text{GI} \times \text{Carbs (g)}}{100}$$
+- **Multi-Dimensional Recovery Model (Strain, Sleep, Autonomic Recovery)**:
+  - Bypasses the single-integer metric limitations of standard trackers by introducing a multi-dimensional clinical telemetry model bringing parity with WHOOP v5.0.
+  - Calculates dynamic cardiovascular **Strain Score** (0.0 to 21.0 active load scale), overnight **Sleep Capacity** (accounting for sleep apnea incidents and late-night calories), and **Autonomic Recovery** capacity.
 - **Zero-Hardware Contributor Path (Emulator HAL)**:
   - Establishes a biosensor Hardware Abstraction Layer (`WearableSensorBridge.kt`).
   - Playback of pre-recorded clinical biometric CSV arrays (stress, sweat, hydration, and pulse intervals) allows developers to build, test, and run the entire ecosystem without requiring a physical watch.
+
+### Target Audience & Defensible Moat
+
+NeuralPulse's strongest realistic market position is not "beats all competitors across all dimensions"—it is **the only open-source Android health platform that unifies raw wearable biometrics, clinical FHIR export, and camera-based portion-accurate nutrition in a single codebase**.
+
+The platform is designed specifically for:
+- **Android Developers & Researchers** who want transparent, un-shaded DSP signal processing instead of black-box cloud-filtered metrics.
+- **Clinicians & Diabetics** who require subscription-free, exportable, local-first biometric data mapped to the international HL7 FHIR standard.
+
 
 ### Competitor Strategy Comparison Matrix
 
