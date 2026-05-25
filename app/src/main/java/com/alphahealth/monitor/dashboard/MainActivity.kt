@@ -47,6 +47,13 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -75,8 +82,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var darkTheme by remember { mutableStateOf(true) }
-            
+            var showSplash by remember { mutableStateOf(true) }
+
             NeuralPulseTheme(darkTheme = darkTheme) {
+                AnimatedContent(
+                    targetState = showSplash,
+                    transitionSpec = {
+                        fadeIn(tween(400)) togetherWith fadeOut(tween(300))
+                    },
+                    label = "SplashTransition"
+                ) { isSplash ->
+                    if (isSplash) {
+                        AlphaSplashScreen(onComplete = { showSplash = false })
+                    } else {
                 val connectionState by healthDataManager.connectionState.collectAsState()
                 
                 var liveEda by remember { mutableStateOf(1.8f) }
@@ -270,7 +288,7 @@ class MainActivity : ComponentActivity() {
                         gaitOscillation = 9.2f
                         gaitAsymmetry = true
                         gaitBalanceLeft = 47.2f
-                        Toast.makeText(this, "Gait metrics synced.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(applicationContext, "Gait metrics synced.", Toast.LENGTH_SHORT).show()
                     },
                     onGenerateReport = {
                         pulmonologyReport = reportExporter.generatePulmonologyReport(
@@ -278,7 +296,7 @@ class MainActivity : ComponentActivity() {
                             minSpO2Value = if (sleepApneaRecent) 82 else 96,
                             avgHR = heartRate
                         )
-                        Toast.makeText(this, "Clinical anomalies PDF generated successfully with password-encryption.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(applicationContext, "Clinical anomalies PDF generated successfully with password-encryption.", Toast.LENGTH_SHORT).show()
                     },
                     onResetSimulation = {
                         liveEda = 1.8f
@@ -308,9 +326,11 @@ class MainActivity : ComponentActivity() {
                     darkTheme = darkTheme,
                     onThemeToggle = { darkTheme = !darkTheme }
                 )
-            }
-        }
-    }
+                    } // else (dashboard)
+                } // AnimatedContent (splash -> dashboard)
+            } // NeuralPulseTheme
+        } // setContent
+    } // onCreate
 
     override fun onDestroy() {
         super.onDestroy()
@@ -480,71 +500,10 @@ fun DashboardScreen(
             }
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                NavigationBarItem(
-                    selected = activeTab == 0,
-                    onClick = { activeTab = 0 },
-                    icon = { Icon(Icons.Outlined.Analytics, contentDescription = "Dashboard Hub") },
-                    label = { Text("Command", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AlphaAccentBlue,
-                        selectedTextColor = AlphaAccentBlue
-                    )
-                )
-                NavigationBarItem(
-                    selected = activeTab == 1,
-                    onClick = { activeTab = 1 },
-                    icon = { Icon(Icons.Outlined.PhotoCamera, contentDescription = "Diet Vision") },
-                    label = { Text("Vision", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AlphaAccentBlue,
-                        selectedTextColor = AlphaAccentBlue
-                    )
-                )
-                NavigationBarItem(
-                    selected = activeTab == 2,
-                    onClick = { activeTab = 2 },
-                    icon = { Icon(Icons.Outlined.HistoryEdu, contentDescription = "Clinical Vault") },
-                    label = { Text("Vault", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AlphaAccentBlue,
-                        selectedTextColor = AlphaAccentBlue
-                    )
-                )
-                NavigationBarItem(
-                    selected = activeTab == 3,
-                    onClick = { activeTab = 3 },
-                    icon = { Icon(Icons.Outlined.SettingsInputAntenna, contentDescription = "Automation Map") },
-                    label = { Text("IoT", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AlphaAccentBlue,
-                        selectedTextColor = AlphaAccentBlue
-                    )
-                )
-                NavigationBarItem(
-                    selected = activeTab == 4,
-                    onClick = { activeTab = 4 },
-                    icon = { Icon(Icons.Outlined.DirectionsRun, contentDescription = "Gait Tracker") },
-                    label = { Text("Biometrics", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AlphaAccentBlue,
-                        selectedTextColor = AlphaAccentBlue
-                    )
-                )
-                NavigationBarItem(
-                    selected = activeTab == 5,
-                    onClick = { activeTab = 5 },
-                    icon = { Icon(Icons.Outlined.Shield, contentDescription = "Identity Profile") },
-                    label = { Text("Profile", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AlphaAccentBlue,
-                        selectedTextColor = AlphaAccentBlue
-                    )
-                )
-            }
+            AlphaSpringNavBar(
+                activeTab = activeTab,
+                onTabSelected = { activeTab = it }
+            )
         }
     ) { innerPadding ->
         Surface(
@@ -553,60 +512,67 @@ fun DashboardScreen(
                 .padding(innerPadding),
             color = MaterialTheme.colorScheme.background
         ) {
-            when (activeTab) {
-                0 -> EcosystemCommandTab(
-                    risk = risk,
-                    liveEda = liveEda,
-                    liveHydration = liveHydration,
-                    heartRate = heartRate,
-                    watchPpgSqi = watchPpgSqi,
-                    sleepApneaRecent = sleepApneaRecent,
-                    energyScore = energyScore,
-                    calendarBlocked = calendarBlocked,
-                    onDeviceExplanation = onDeviceExplanation,
-                    isSignalDegraded = isSignalDegraded,
-                    onSignalDegradedChange = onSignalDegradedChange,
-                    isNocturnal = isNocturnal,
-                    onNocturnalChange = onNocturnalChange,
-                    ringEda = ringEda,
-                    onRingEdaChange = onRingEdaChange,
-                    ringHydration = ringHydration,
-                    onRingHydrationChange = onRingHydrationChange,
-                    onTriggerConsent = onTriggerConsent,
-                    onSimulateStress = onSimulateStress,
-                    onResetSimulation = onResetSimulation
-                )
-                1 -> AiVisionTab(
-                    scannedFood = scannedFood,
-                    glycemicRiskPercent = risk.glycemicRiskPercent,
-                    onTriggerFoodScan = onTriggerFoodScan,
-                    onClearFood = onClearFood
-                )
-                2 -> ClinicalVaultTab(
-                    pulmonologyReport = pulmonologyReport,
-                    sleepApneaRecent = sleepApneaRecent,
-                    heartRate = heartRate,
-                    onGenerateReport = onGenerateReport
-                )
-                3 -> AmbientIoTTab(
-                    isNocturnal = isNocturnal,
-                    ringEda = ringEda,
-                    ringHydration = ringHydration,
-                    liveEda = liveEda,
-                    liveHydration = liveHydration,
-                    onRingEdaChange = onRingEdaChange,
-                    onRingHydrationChange = onRingHydrationChange
-                )
-                4 -> BiomechanicalTab(
-                    gaitGct = gaitGct,
-                    gaitOscillation = gaitOscillation,
-                    gaitAsymmetry = gaitAsymmetry,
-                    gaitBalanceLeft = gaitBalanceLeft,
-                    onRunGaitTracking = onRunGaitTracking
-                )
-                5 -> ProfileVaultTab()
-            }
+            val currentRoute = AlphaRoutes.fromTabIndex(activeTab)
+            AlphaNavigationLifecycleBinder(currentNodeRoute = currentRoute) { contentModifier ->
+                AnimatedContent(
+                    targetState = activeTab,
+                    transitionSpec = {
+                        val direction = if (targetState > initialState) 1 else -1
+                        (slideInVertically { direction * 24 } + fadeIn(tween(250))) togetherWith
+                        (slideOutVertically { -direction * 24 } + fadeOut(tween(200)))
+                    },
+                    label = "TabContent"
+                ) { tab ->
+                    when (tab) {
+                        0 -> EcosystemCommandTab(
+                            risk = risk,
+                            liveEda = liveEda,
+                            liveHydration = liveHydration,
+                            heartRate = heartRate,
+                            watchPpgSqi = watchPpgSqi,
+                            sleepApneaRecent = sleepApneaRecent,
+                            energyScore = energyScore,
+                            calendarBlocked = calendarBlocked,
+                            onDeviceExplanation = onDeviceExplanation,
+                            isSignalDegraded = isSignalDegraded,
+                            onSignalDegradedChange = onSignalDegradedChange,
+                            isNocturnal = isNocturnal,
+                            onNocturnalChange = onNocturnalChange,
+                            ringEda = ringEda,
+                            onRingEdaChange = onRingEdaChange,
+                            ringHydration = ringHydration,
+                            onRingHydrationChange = onRingHydrationChange,
+                            onTriggerConsent = onTriggerConsent,
+                            onSimulateStress = onSimulateStress,
+                            onResetSimulation = onResetSimulation
+                        )
+                        1 -> AiVisionTab(
+                            scannedFood = scannedFood,
+                            glycemicRiskPercent = risk.glycemicRiskPercent,
+                            onTriggerFoodScan = onTriggerFoodScan,
+                            onClearFood = onClearFood
+                        )
+                        2 -> ClinicalVaultTab(
+                            pulmonologyReport = pulmonologyReport,
+                            sleepApneaRecent = sleepApneaRecent,
+                            heartRate = heartRate,
+                            onGenerateReport = onGenerateReport
+                        )
+                        3 -> AmbientIoTTab(
+                            isNocturnal = isNocturnal,
+                            ringEda = ringEda,
+                            ringHydration = ringHydration,
+                            liveEda = liveEda,
+                            liveHydration = liveHydration,
+                            onRingEdaChange = onRingEdaChange,
+                            onRingHydrationChange = onRingHydrationChange
+                        )
+                        4 -> ProfileVaultTab()
+                        else -> ProfileVaultTab()
+                    }
+                } // AnimatedContent tabs
+            } // AlphaNavigationLifecycleBinder
         }
     }
-}
-}
+    } // AlphaAdminNavigationDrawer content
+} // DashboardScreen
