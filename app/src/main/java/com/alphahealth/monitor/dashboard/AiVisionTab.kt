@@ -71,7 +71,7 @@ import java.util.concurrent.Executors
 fun AiVisionTab(
     scannedFood: FoodScanResult?,
     glycemicRiskPercent: Int,
-    onTriggerFoodScan: (String) -> Unit, // kept for external VM compat
+    onTriggerFoodScan: (FoodScanResult) -> Unit,
     onClearFood: () -> Unit
 ) {
     val context = LocalContext.current
@@ -194,16 +194,11 @@ fun AiVisionTab(
                                             isAnalyzing = true
                                             try {
                                                 // Convert ImageProxy to Bitmap for MediaPipe
-                                                val bitmap = imageProxy.toBitmap()
-                                                val result = foodVisionEngine.scanFoodFrame(bitmap)
-                                                if (result != null) {
-                                                    // Post result to main thread via token string
-                                                    // The token is the exact food name for nutrition lookup
-                                                    val token = result.foodItemName
-                                                        .lowercase()
-                                                        .replace(" ", "_")
-                                                    onTriggerFoodScan(token)
-                                                }
+                                                 val bitmap = imageProxy.toBitmap()
+                                                 val result = foodVisionEngine.scanFoodFrame(bitmap)
+                                                 if (result != null) {
+                                                     onTriggerFoodScan(result)
+                                                 }
                                             } catch (e: Exception) {
                                                 Log.e("AiVisionTab", "Inference error: ${e.message}")
                                             } finally {

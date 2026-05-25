@@ -272,13 +272,8 @@ class MainActivity : ComponentActivity() {
                             onFailure = {}
                         )
                     },
-                    onTriggerFoodScan = { foodToken ->
-                        scannedFood = when (foodToken) {
-                            "chicken" -> FoodScanResult("Grilled Chicken Breast", 0.94f, 165, mapOf("Protein" to 31f, "Carbs" to 0f, "Fats" to 3.6f))
-                            "avocado" -> FoodScanResult("Avocado Slice", 0.88f, 161, mapOf("Protein" to 2f, "Carbs" to 8.5f, "Fats" to 14.7f))
-                            "pasta" -> FoodScanResult("Pasta Carbonara", 0.91f, 490, mapOf("Protein" to 14f, "Carbs" to 58f, "Fats" to 19f))
-                            else -> null
-                        }
+                    onTriggerFoodScan = { foodResult ->
+                        scannedFood = foodResult
                     },
                     onClearFood = {
                         scannedFood = null
@@ -402,7 +397,7 @@ fun DashboardScreen(
     ringHydration: Float,
     onRingHydrationChange: (Float) -> Unit,
     onTriggerConsent: () -> Unit,
-    onTriggerFoodScan: (String) -> Unit,
+    onTriggerFoodScan: (FoodScanResult) -> Unit,
     onClearFood: () -> Unit,
     onRunGaitTracking: () -> Unit,
     onGenerateReport: () -> Unit,
