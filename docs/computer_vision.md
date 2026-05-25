@@ -51,4 +51,13 @@ To prevent fleeting false positives (e.g. a momentary shadow misclassified as pa
 2. The queue evaluates the frequency of predictions:
    - If the same food item appears **at least 2 out of 3 times** in the window, it is considered stable.
    - The item is then returned and committed to the Room Database.
-   - If no consensus is found, the screen remains in a standby scanning state.
+- If no consensus is found, the screen remains in a standby scanning state.
+
+---
+
+## 3. CameraX & One UI 6 Scanner Integration
+
+In the updated UI, the `AiVisionTab.kt` screen combines low-latency video feed with tactile control blocks:
+1. **Camera Viewport (Upper Viewing Area)**: Uses Jetpack CameraX's `PreviewView` bound to the lifecycle of the companion app activity.
+2. **NPU Bounding Box Canvas Overlay**: Draws green highlighted rectangular focus grids and target metrics on top of the live feed whenever stable classifications are resolved.
+3. **Consensus Details (Lower Interaction Area)**: Houses the 3-frame temporal consensus indicators, live macro-nutrient progress bars (Protein, Carbs, Fats), and simulated meal test selectors (Avocado, Chicken, Pasta) to support offline validation.

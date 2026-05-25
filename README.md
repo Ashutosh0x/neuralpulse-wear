@@ -89,6 +89,54 @@ graph TD
 
 ---
 
+---
+
+## Premium One UI 6 & Material 3 Companion Experience
+
+The Mobile Companion App (`:app`) has been refactored to align with Samsung's modern **One UI 6** and **Material 3 Expressive (2026)** structural guidelines. The interface splits each tab into an upper **Viewing Area** (high-contrast, scannable data visualization) and a lower **Interaction Area** (tactile, 24dp rounded focus blocks containing touch controls).
+
+```
+┌────────────────────────────────────────┐
+│         Ecosystem Command              │  ◄── Clean, Thin Header
+├────────────────────────────────────────┤
+│  ┌──────────────────────────────────┐  │
+│  │    [ 65 / 100 ]   Moderate Strain│  │  ◄── Hero Card (Vulnerability Canvas Arc)
+│  └──────────────────────────────────┘  │
+│  ┌──────────────────────────────────┐  │
+│  │ Outlined notifications / alerts  │  │  ◄── Floating Status Banner (Muted Ruby)
+│  └──────────────────────────────────┘  │
+│  ┌──────────────────────────────────┐  │
+│  │ Outlined explainability card     │  │  ◄── Insights Card (Gemma Summary)
+│  └──────────────────────────────────┘  │
+│  ┌──────────────────────────────────┐  │
+│  │ Bio-Stream Telemetry (2x2 Grid)  │  │  ◄── Telemetry Card (Pill Grid Items)
+│  └──────────────────────────────────┘  │
+└────────────────────────────────────────┘
+```
+
+The user interface spans six specialized tabbed activities:
+
+1. **Ecosystem Command Hub (Page 1)**: Serves as the primary operational command center.
+   - *Viewing Area*: A large custom Vector Arc displaying the real-time Vulnerability Index (0-100) and recovery status.
+   - *Interaction Area*: A 2x2 grid container detailing streaming Wear OS biometrics (EDA, hydration, heart rate, SQI) and a minimalist outline control array.
+2. **AI Vision Nutrition Scanner (Page 2)**: Houses the low-latency, zero-shutter CameraX viewport.
+   - *Viewing Area*: Full-bleed camera viewfinder overlaid with active bounding boxes drawn directly on top of GPU-processed object detections.
+   - *Interaction Area*: Bottom sheet card detailing macro-nutrients (Protein, Carbs, Fats) and glycemic risk metrics.
+3. **Clinical Vault & FHIR Archive (Page 3)**: Manages medical records and trajectory trends.
+   - *Viewing Area*: Chronological Canvas trend lines displaying multi-night Sleep Apnea occurrences.
+   - *Interaction Area*: List of observations synced over Health Connect and encrypted provider-ready PDF exporters.
+4. **Ambient IoT & Device Automation (Page 4)**: Configures multi-wearable weights and Matter climate baselines.
+   - *Viewing Area*: Canvas diagram mapping active wearables topology (Watch vs. Ring connections).
+   - *Interaction Area*: SmartThings climate sliders (targeting temperature cool-downs).
+5. **Biomechanical Dynamics (Page 5)**: Displays sports science summaries.
+   - *Viewing Area*: Symmetrical gait balance meter indicating Ground Contact Time (GCT).
+   - *Interaction Area*: Focus cards outlining vertical bounce ratio and muscle fatigue indicators.
+6. **Profile & Identity Vault (Page 6)**: Configures security privacy sandboxing.
+   - *Viewing Area*: User attestation details and partner SHA-256 fingerprint signature profiles.
+   - *Interaction Area*: Switches to toggle Health Connect consents and offline GPU Gemma SLM processing, alongside FDA wellness disclaimer cards.
+
+---
+
 ## Project Structure
 
 ```
