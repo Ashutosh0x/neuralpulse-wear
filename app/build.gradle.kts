@@ -92,6 +92,14 @@ dependencies {
 
     // Wear OS communication layer
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
+    
+    // CameraX for real-time camera feed
+    val cameraxVersion = "1.3.1"
+    implementation("androidx.camera:camera-core:$cameraxVersion")
+    implementation("androidx.camera:camera-camera2:$cameraxVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
+    implementation("androidx.camera:camera-view:$cameraxVersion")
+    
     // implementation("androidx.health.connect:connect-client:1.1.0-alpha11") (Stubbed out for compilation compatibility)
 
     // Google MediaPipe Tasks Vision for on-device AI computer vision (v0.10.x)

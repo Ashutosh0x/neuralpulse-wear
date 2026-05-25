@@ -7,9 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,12 +37,15 @@ import com.alphahealth.monitor.vision.FoodScanResult
 import com.alphahealth.monitor.vision.FoodVisionEngine
 import com.alphahealth.monitor.shared.SyncProtocols
 import kotlinx.coroutines.launch
-import com.alphahealth.monitor.dashboard.NeuralPulseDataCard
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PhotoCamera
-import androidx.compose.material.icons.rounded.Analytics
-import androidx.compose.material.icons.rounded.PictureAsPdf
-import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.outlined.Analytics
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.HistoryEdu
+import androidx.compose.material.icons.outlined.SettingsInputAntenna
+import androidx.compose.material.icons.outlined.DirectionsRun
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.DarkMode
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -72,7 +73,9 @@ class MainActivity : ComponentActivity() {
         fhirOrchestrator = HealthConnectFhirOrchestrator(applicationContext)
 
         setContent {
-            NeuralPulseTheme {
+            var darkTheme by remember { mutableStateOf(true) }
+            
+            NeuralPulseTheme(darkTheme = darkTheme) {
                 val connectionState by healthDataManager.connectionState.collectAsState()
                 
                 var liveEda by remember { mutableStateOf(1.8f) }
@@ -227,7 +230,6 @@ class MainActivity : ComponentActivity() {
                     gaitBalanceLeft = gaitBalanceLeft,
                     pulmonologyReport = pulmonologyReport,
                     calendarBlocked = calendarBlocked,
-                    geminiVoiceFeedback = geminiVoiceFeedback,
                     onDeviceExplanation = onDeviceExplanation,
                     isSignalDegraded = isSignalDegraded,
                     onSignalDegradedChange = { isSignalDegraded = it },
@@ -277,17 +279,6 @@ class MainActivity : ComponentActivity() {
                         )
                         Toast.makeText(this, "Clinical anomalies PDF generated successfully with password-encryption.", Toast.LENGTH_SHORT).show()
                     },
-                    onQueryGemini = {
-                        val response = geminiAppFunctions.checkPhysicalRecoveryStatus(riskAnalysis.vulnerabilityIndex)
-                        geminiVoiceFeedback = response.vocalBreakdown
-                    },
-                    onSimulateStress = {
-                        liveEda = 5.2f
-                        liveHydration = 0.56f
-                        heartRate = 96
-                        energyScore = 48
-                        sleepApneaRecent = true
-                    },
                     onResetSimulation = {
                         liveEda = 1.8f
                         liveHydration = 0.62f
@@ -301,12 +292,20 @@ class MainActivity : ComponentActivity() {
                         gaitBalanceLeft = 50.0f
                         pulmonologyReport = null
                         calendarBlocked = false
-                        geminiVoiceFeedback = ""
                         isSignalDegraded = false
                         isNocturnal = false
                         ringEda = 1.2f
                         ringHydration = 0.68f
-                    }
+                    },
+                    onSimulateStress = {
+                        liveEda = 5.2f
+                        liveHydration = 0.56f
+                        heartRate = 96
+                        energyScore = 48
+                        sleepApneaRecent = true
+                    },
+                    darkTheme = darkTheme,
+                    onThemeToggle = { darkTheme = !darkTheme }
                 )
             }
         }
@@ -316,20 +315,6 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         explainEngine.close()
     }
-}
-
-@Composable
-fun NeuralPulseTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = darkColorScheme(
-            primary = Color(0xFF3B82F6),
-            secondary = Color(0xFF10B981),
-            error = Color(0xFFF87171),
-            background = Color(0xFF0B0B0C),
-            surface = Color(0xFF18181A)
-        ),
-        content = content
-    )
 }
 
 object VariableFontProvider {
@@ -386,7 +371,6 @@ fun DashboardScreen(
     gaitBalanceLeft: Float,
     pulmonologyReport: PulmonologyReport?,
     calendarBlocked: Boolean,
-    geminiVoiceFeedback: String,
     onDeviceExplanation: String,
     isSignalDegraded: Boolean,
     onSignalDegradedChange: (Boolean) -> Unit,
@@ -401,43 +385,24 @@ fun DashboardScreen(
     onClearFood: () -> Unit,
     onRunGaitTracking: () -> Unit,
     onGenerateReport: () -> Unit,
-    onQueryGemini: () -> Unit,
+    onResetSimulation: () -> Unit,
     onSimulateStress: () -> Unit,
-    onResetSimulation: () -> Unit
+    darkTheme: Boolean,
+    onThemeToggle: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
-
-    // Bold, condensed display font family to let large stats scale without wrapping
+    var activeTab by remember { mutableStateOf(0) }
     val condensedFontFamily = remember { VariableFontProvider.getFontFamily(weight = 800, width = 75f) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0B0B0C))
-            .statusBarsPadding()
-    ) {
-        
-        // ----------------------------------------------------
-        // TOP 1/3: NON-INTERRUPTIVE SCANNABLE ZONE (ONE UI 6 ETHOS)
-        // ----------------------------------------------------
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1.2f)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFF151518), Color(0xFF0B0B0C))
-                    )
-                )
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
+    Scaffold(
+        topBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.background,
+                modifier = Modifier.statusBarsPadding()
             ) {
-                // Nav header
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -447,7 +412,7 @@ fun DashboardScreen(
                             style = TextStyle(
                                 fontFamily = condensedFontFamily,
                                 fontSize = 11.sp,
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.5.sp
                             )
@@ -457,544 +422,170 @@ fun DashboardScreen(
                             style = TextStyle(
                                 fontFamily = condensedFontFamily,
                                 fontSize = 18.sp,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Black
                             )
                         )
                     }
                     
-                    Surface(
-                        color = when (connectionState) {
-                            is HealthDataManager.ConnectionState.Connected -> Color(0xFF065F46)
-                            else -> Color(0xFF27272A)
-                        },
-                        shape = RoundedCornerShape(10.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = if (connectionState is HealthDataManager.ConnectionState.Connected) "Store Online" else "Store Offline",
-                            fontSize = 10.sp,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                // Giant Dial Gauge
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "VULNERABILITY INDEX",
-                            fontSize = 10.sp,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text(
-                                text = "${risk.vulnerabilityIndex}",
-                                style = TextStyle(
-                                    fontFamily = condensedFontFamily,
-                                    fontSize = 48.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = when {
-                                        risk.vulnerabilityIndex >= 70 -> Color(0xFFF87171)
-                                        risk.vulnerabilityIndex >= 40 -> Color(0xFFFBBF24)
-                                        else -> Color(0xFF10B981)
-                                    }
-                                )
+                        IconButton(onClick = onThemeToggle) {
+                            Icon(
+                                imageVector = if (darkTheme) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
+                                contentDescription = "Theme Toggle",
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
+                        }
+
+                        Surface(
+                            color = when (connectionState) {
+                                is HealthDataManager.ConnectionState.Connected -> AlphaMintGreen
+                                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                            },
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
                             Text(
-                                text = "/100",
-                                style = TextStyle(
-                                    fontFamily = condensedFontFamily,
-                                    fontSize = 16.sp,
-                                    color = Color.Gray
-                                ),
-                                modifier = Modifier.padding(bottom = 8.dp, start = 2.dp)
+                                text = if (connectionState is HealthDataManager.ConnectionState.Connected) "Store Online" else "Store Offline",
+                                fontSize = 10.sp,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
-                    
-                    // State description
-                    Text(
-                        text = risk.conditionRisk,
-                        fontSize = 13.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.width(150.dp)
-                    )
                 }
             }
-        }
-
-        // ----------------------------------------------------
-        // LOWER 2/3: COMFORT ACTIVE THUMB ZONE (SCROLLABLE INTERACTION)
-        // ----------------------------------------------------
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(2.5f)
-                .background(Color(0xFF0B0B0C))
-                .padding(horizontal = 16.dp)
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            if (calendarBlocked) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF7F1D1D)),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Google Calendar Rest Slot Active: 90 minutes blocked to buffer metabolic exhaustions.",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(12.dp),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            // AI coach card
-            NeuralPulseDataCard(title = "PREDICTIVE AI INTERVENTION") {
-                Column {
-                    Text(
-                        text = risk.recommendedMicroIntervention,
-                        fontSize = 12.sp,
-                        color = Color.White,
-                        lineHeight = 24.sp,
-                        fontFamily = FontFamily.SansSerif
-                    )
-                    if (risk.thermalNutritionalWarning != "Thermal baselines stable.") {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = risk.thermalNutritionalWarning,
-                            fontSize = 11.sp,
-                            color = Color(0xFFF87171),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            // On-Device Explainability card (MediaPipe Text SLM Gemma engine)
-            NeuralPulseDataCard(title = "ON-DEVICE AI EXPLAINABILITY") {
-                Column {
-                    Text(
-                        text = onDeviceExplanation,
-                        fontSize = 12.sp,
-                        color = Color.White,
-                        lineHeight = 24.sp,
-                        fontFamily = FontFamily.SansSerif
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Source: On-Device Gemma (INT8) | Active Input: ${risk.resolvedDeviceSource}",
-                        fontSize = 10.sp,
-                        color = Color.Gray,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            // Gemini Chat bubble card
-            NeuralPulseDataCard(title = "GEMINI APP-FUNCTIONS DIALOG") {
-                Column {
-                    if (geminiVoiceFeedback.isNotEmpty()) {
-                        Text(
-                            text = "\"$geminiVoiceFeedback\"",
-                            fontSize = 12.sp,
-                            color = Color.White,
-                            lineHeight = 24.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = FontFamily.SansSerif
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    Button(
-                        onClick = onQueryGemini,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF312E81)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = "Ask Gemini: recovery status", fontSize = 11.sp, color = Color.White)
-                    }
-                }
-            }
-
-            // MediaPipe zero-shutter food scanner UI
-            NeuralPulseDataCard(title = "MEDIAPIPE AI NUTRITION VIEWFINDER") {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Zero-Shutter Vision Pipeline",
-                            fontSize = 11.sp,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Icon(
-                            imageVector = Icons.Rounded.PhotoCamera,
-                            contentDescription = "Camera Icon",
-                            tint = Color(0xFF10B981),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Stylized viewfinder screen
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .background(Color.Black, shape = RoundedCornerShape(12.dp))
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (scannedFood == null) {
-                            Text(
-                                text = "Zero-Shutter Viewfinder Standby\nPoint camera at nutrition item",
-                                fontSize = 11.sp,
-                                color = Color.Gray,
-                                textAlign = TextAlign.Center,
-                                lineHeight = 24.sp,
-                                fontFamily = FontFamily.SansSerif
-                            )
-                        } else {
-                            // Instant-Add checklist overlay in zero-shutter
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(
-                                        Color(0xFF0F172A),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .padding(8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "Scanned: ${scannedFood.foodItemName}",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        text = "${scannedFood.baselineCalories} kcal | Confidence: ${String.format("%.0f%%", scannedFood.confidence * 100f)}",
-                                        fontSize = 11.sp,
-                                        color = Color.LightGray
-                                    )
-                                }
-                                
-                                // Single-Tap Ingestion add checkmark button
-                                Button(
-                                    onClick = onClearFood,
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
-                                ) {
-                                    Text(text = "✓ Log", fontSize = 10.sp, color = Color.White)
-                                }
-                            }
-                        }
-                    }
-
-                    if (scannedFood != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            scannedFood.macronutrients.forEach { (macro, value) ->
-                                Column {
-                                    Text(text = macro, fontSize = 9.sp, color = Color.Gray)
-                                    Text(text = "${value}g", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(text = "Glycemic Clearance Curve", fontSize = 11.sp, color = Color.LightGray)
-                            Text(
-                                text = "${risk.glycemicRiskPercent}% Risk",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (risk.glycemicRiskPercent >= 70) Color(0xFFF87171) else Color(0xFF10B981)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Button(
-                            onClick = { onTriggerFoodScan("avocado") },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A)),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(text = "Avocado", fontSize = 10.sp)
-                        }
-                        Button(
-                            onClick = { onTriggerFoodScan("chicken") },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A)),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(text = "Chicken", fontSize = 10.sp)
-                        }
-                        Button(
-                            onClick = { onTriggerFoodScan("pasta") },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A)),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(text = "Pasta", fontSize = 10.sp)
-                        }
-                    }
-                }
-            }
-
-            // Sports gait dynamic card
-            NeuralPulseDataCard(title = "SPORTS SCIENCE & GAIT DYNAMICS") {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Biomechanical Correlation Matrix",
-                            fontSize = 11.sp,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Icon(
-                            imageVector = Icons.Rounded.Analytics,
-                            contentDescription = "Analytics Icon",
-                            tint = Color(0xFFFBBF24),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        MetricRow(label = "Ground Contact Time", value = "$gaitGct ms", highlight = Color.White)
-                        MetricRow(label = "Vertical Oscillation", value = "${gaitOscillation} cm", highlight = Color.White)
-                    }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(text = "Left/Right Step Balance", fontSize = 10.sp, color = Color.Gray)
-                            Text(
-                                text = "${gaitBalanceLeft}% L / ${100f - gaitBalanceLeft}% R",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (gaitAsymmetry) Color(0xFFF87171) else Color(0xFF10B981)
-                            )
-                        }
-                        Button(
-                            onClick = onRunGaitTracking,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A)),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text(text = "Simulate Gait Run", fontSize = 10.sp, color = Color.White)
-                        }
-                    }
-                }
-            }
-
-            // Pulmonology report card
-            NeuralPulseDataCard(title = "PULMONOLOGY & SLEEP APNEA LOGS") {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Medical Report PDF Exporter",
-                            fontSize = 11.sp,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Icon(
-                            imageVector = Icons.Rounded.PictureAsPdf,
-                            contentDescription = "PDF Icon",
-                            tint = Color(0xFFF87171),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    if (pulmonologyReport == null) {
-                        Text(
-                            text = "Analyze sleep apnea sequences across multi-night trajectories, exporting encrypted clinical files for pulmonology consultations.",
-                            fontSize = 11.sp,
-                            color = Color.LightGray,
-                            lineHeight = 24.sp,
-                            fontFamily = FontFamily.SansSerif
-                        )
-                    } else {
-                        Text(
-                            text = "Report: ${pulmonologyReport.fileName}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "Lowest SpO2 desaturation: ${pulmonologyReport.lowestOxygenSaturation}% | Events: ${pulmonologyReport.totalApneaEvents}",
-                            fontSize = 11.sp,
-                            color = Color.LightGray
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Button(
-                        onClick = onGenerateReport,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = "Export Pulmonologist Report", color = Color.White)
-                    }
-                }
-            }
-
-            // v1.1.0 telemetry summary card
-            NeuralPulseDataCard(title = "V1.1.0 DATASTORE LOGS") {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Security Privacy Sandbox Logs",
-                            fontSize = 11.sp,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Icon(
-                            imageVector = Icons.Rounded.Shield,
-                            contentDescription = "Shield Icon",
-                            tint = Color(0xFF3B82F6),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        MetricRow(label = "Energy Score", value = "$energyScore", highlight = Color(0xFF10B981))
-                        MetricRow(label = "Sleep Apnea", value = if (sleepApneaRecent) "Detected" else "Clear", highlight = if (sleepApneaRecent) Color(0xFFF87171) else Color.White)
-                    }
-                }
-            }
-
-            // Sensory stream card
-            NeuralPulseDataCard(title = "WEAR OS BIO-STREAM TELEMETRY") {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        MetricRow(label = "EDA CONDUCTANCE", value = "${String.format("%.2f", liveEda)} uS", highlight = if (liveEda > 4f) Color(0xFFF87171) else Color.White)
-                        MetricRow(label = "CELL HYDRATION", value = "${String.format("%.0f%%", liveHydration * 100f)}", highlight = Color(0xFF3B82F6))
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        MetricRow(label = "WATCH PPG SQI", value = if (watchPpgSqi == 1.0) "Clinical Grade" else "Motion Noise", highlight = if (watchPpgSqi == 1.0) Color(0xFF10B981) else Color(0xFFF87171))
-                        MetricRow(label = "HEART RATE", value = "$heartRate BPM", highlight = Color.White)
-                    }
-                }
-            }
-
-            // Developer actions
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Button(
-                        onClick = { onSignalDegradedChange(!isSignalDegraded) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = if (isSignalDegraded) Color(0xFF7F1D1D) else Color(0xFF27272A))
-                    ) {
-                        Text(text = if (isSignalDegraded) "Wrist Shift Active" else "Signal Normal", fontSize = 10.sp, color = Color.White)
-                    }
-
-                    Button(
-                        onClick = { onNocturnalChange(!isNocturnal) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = if (isNocturnal) Color(0xFF065F46) else Color(0xFF27272A))
-                    ) {
-                        Text(text = if (isNocturnal) "Nocturnal: Ring" else "Active: Watch", fontSize = 10.sp, color = Color.White)
-                    }
-                }
-
-                Button(
-                    onClick = onTriggerConsent,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = "Connect Health SDK Store", color = Color.White)
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Button(
-                        onClick = onSimulateStress,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A))
-                    ) {
-                        Text(text = "Drift Stress", color = Color.White)
-                    }
-                    Button(
-                        onClick = onResetSimulation,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A))
-                    ) {
-                        Text(text = "Reset Sync", color = Color.White)
-                    }
-                }
+                NavigationBarItem(
+                    selected = activeTab == 0,
+                    onClick = { activeTab = 0 },
+                    icon = { Icon(Icons.Outlined.Analytics, contentDescription = "Dashboard Hub") },
+                    label = { Text("Command", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AlphaAccentBlue,
+                        selectedTextColor = AlphaAccentBlue
+                    )
+                )
+                NavigationBarItem(
+                    selected = activeTab == 1,
+                    onClick = { activeTab = 1 },
+                    icon = { Icon(Icons.Outlined.PhotoCamera, contentDescription = "Diet Vision") },
+                    label = { Text("Vision", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AlphaAccentBlue,
+                        selectedTextColor = AlphaAccentBlue
+                    )
+                )
+                NavigationBarItem(
+                    selected = activeTab == 2,
+                    onClick = { activeTab = 2 },
+                    icon = { Icon(Icons.Outlined.HistoryEdu, contentDescription = "Clinical Vault") },
+                    label = { Text("Vault", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AlphaAccentBlue,
+                        selectedTextColor = AlphaAccentBlue
+                    )
+                )
+                NavigationBarItem(
+                    selected = activeTab == 3,
+                    onClick = { activeTab = 3 },
+                    icon = { Icon(Icons.Outlined.SettingsInputAntenna, contentDescription = "Automation Map") },
+                    label = { Text("IoT", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AlphaAccentBlue,
+                        selectedTextColor = AlphaAccentBlue
+                    )
+                )
+                NavigationBarItem(
+                    selected = activeTab == 4,
+                    onClick = { activeTab = 4 },
+                    icon = { Icon(Icons.Outlined.DirectionsRun, contentDescription = "Gait Tracker") },
+                    label = { Text("Biometrics", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AlphaAccentBlue,
+                        selectedTextColor = AlphaAccentBlue
+                    )
+                )
+                NavigationBarItem(
+                    selected = activeTab == 5,
+                    onClick = { activeTab = 5 },
+                    icon = { Icon(Icons.Outlined.Shield, contentDescription = "Identity Profile") },
+                    label = { Text("Profile", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AlphaAccentBlue,
+                        selectedTextColor = AlphaAccentBlue
+                    )
+                )
             }
-            Spacer(modifier = Modifier.height(24.dp))
         }
-    }
-}
-
-@Composable
-fun MetricRow(label: String, value: String, highlight: Color) {
-    Column {
-        Text(text = label, fontSize = 10.sp, color = Color.Gray, fontFamily = FontFamily.SansSerif)
-        Text(text = value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = highlight, fontFamily = FontFamily.SansSerif)
+    ) { innerPadding ->
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            when (activeTab) {
+                0 -> EcosystemCommandTab(
+                    risk = risk,
+                    liveEda = liveEda,
+                    liveHydration = liveHydration,
+                    heartRate = heartRate,
+                    watchPpgSqi = watchPpgSqi,
+                    sleepApneaRecent = sleepApneaRecent,
+                    energyScore = energyScore,
+                    calendarBlocked = calendarBlocked,
+                    onDeviceExplanation = onDeviceExplanation,
+                    isSignalDegraded = isSignalDegraded,
+                    onSignalDegradedChange = onSignalDegradedChange,
+                    isNocturnal = isNocturnal,
+                    onNocturnalChange = onNocturnalChange,
+                    ringEda = ringEda,
+                    onRingEdaChange = onRingEdaChange,
+                    ringHydration = ringHydration,
+                    onRingHydrationChange = onRingHydrationChange,
+                    onTriggerConsent = onTriggerConsent,
+                    onSimulateStress = onSimulateStress,
+                    onResetSimulation = onResetSimulation
+                )
+                1 -> AiVisionTab(
+                    scannedFood = scannedFood,
+                    glycemicRiskPercent = risk.glycemicRiskPercent,
+                    onTriggerFoodScan = onTriggerFoodScan,
+                    onClearFood = onClearFood
+                )
+                2 -> ClinicalVaultTab(
+                    pulmonologyReport = pulmonologyReport,
+                    sleepApneaRecent = sleepApneaRecent,
+                    heartRate = heartRate,
+                    onGenerateReport = onGenerateReport
+                )
+                3 -> AmbientIoTTab(
+                    isNocturnal = isNocturnal,
+                    ringEda = ringEda,
+                    ringHydration = ringHydration,
+                    liveEda = liveEda,
+                    liveHydration = liveHydration,
+                    onRingEdaChange = onRingEdaChange,
+                    onRingHydrationChange = onRingHydrationChange
+                )
+                4 -> BiomechanicalTab(
+                    gaitGct = gaitGct,
+                    gaitOscillation = gaitOscillation,
+                    gaitAsymmetry = gaitAsymmetry,
+                    gaitBalanceLeft = gaitBalanceLeft,
+                    onRunGaitTracking = onRunGaitTracking
+                )
+                5 -> ProfileVaultTab()
+            }
+        }
     }
 }
