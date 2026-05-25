@@ -238,7 +238,7 @@ fun EcosystemCommandTab(
                                 text = if (sleepApneaRecent) "Detected" else "Clear",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (sleepApneaRecent) Color(0xFFFCA5A5) else AlphaMintGreen,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily.Monospace,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
